@@ -1,0 +1,9 @@
+include Makefile CHANGES AUTHORS LICENSE
+include *.txt
+include *.md
+
+recursive-exclude * *.py[co]
+recursive-exclude * __pycache__
+
+#recursive-include docs *
+#prune libs/xxx/.git
