@@ -9,7 +9,7 @@ from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 from pyutils import log, debug
 from pyutils import type_utils
 
-from kuankr_utils.logger.logstash import log as logstash_log
+from kuankr_utils.logstash import log as logstash_log
 
 from kuankr_utils import api_json
 

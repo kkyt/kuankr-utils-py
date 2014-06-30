@@ -30,7 +30,14 @@ setup(
     ],
 
     install_requires=[
-        #"Django >= 1.1.1",
+        "blinker",
+        "mongokit",
+        "flask",
+        "requests",
+        "pymongo",
+        "python-logstash",
+        "Flask-API",
+        "Flask-MongoEngine",
     ],
 
     dependency_links=[

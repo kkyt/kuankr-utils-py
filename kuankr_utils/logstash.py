@@ -18,7 +18,7 @@ LOGSTASH_URI = os.environ.get('LOGSTASH_URI', default_uri)
 
 if not LOGSTASH_URI:
     log = FakeLogger()
-else
+else:
     uri = urlparse(LOGSTASH_URI)
 
     if not uri.hostname:
