@@ -7,7 +7,11 @@ import os
 import urllib
 from urlparse import urlparse
 
-from .fake import FakeLogger
+class FakeLogger(object):
+    def __getattr__(self, m):
+        def f(*args, **kwargs):
+            pass
+        return f
 
 default_uri = None #'tcp://127.0.0.1:20110'
 LOGSTASH_URI = os.environ.get('LOGSTASH_URI', default_uri)
