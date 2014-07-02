@@ -5,9 +5,10 @@ import uuid
 import bson
 from datetime import datetime
 
-from mongokit import Connection, Document
+from kuankr_utils import date_time
+from kuankr_utils.mongodb import OBJECTID_PATTERN
 
-OBJECT_ID_PATTERN = re.compile('[a-z0-9]{24}')
+from mongokit import Connection, Document
 
 def register_models(db, *models):
     for model in models:
@@ -22,7 +23,7 @@ class Doc(Document):
     }
     default_values = {
         'uuid': uuid.uuid4,
-        'updated_at': datetime.utcnow
+        'updated_at': date_time.now
     }
     required_fields = [ 'uuid', 'updated_at' ]
 
@@ -42,7 +43,7 @@ class HasName(Document):
     }]
 
     def find_by_id_or_name(self, id_or_name, where=None):
-        if isinstance(id_or_name, bson.ObjectId) or OBJECT_ID_PATTERN.match(id_or_name):
+        if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
             return self.find_one(id=id_or_name)
         else:
             w = {'name': id_or_name}

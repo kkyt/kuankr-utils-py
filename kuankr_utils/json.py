@@ -9,7 +9,7 @@ import functools
 import decimal
 
 from kuankr_utils import log
-from kuankr_utils.datetime import with_tzinfo
+from kuankr_utils.date_time import with_tzinfo
 
 #ref: aspen/json_
 
@@ -45,6 +45,10 @@ class Encoder(json.JSONEncoder):
         e = _encoders.get(c)
         if e is not None:
             return e(obj)
+
+        if hasattr(obj, '__str__'):
+            #ObjectId, UUID
+            return str(obj)
 
         return super(Encoder, self).default(obj)
 

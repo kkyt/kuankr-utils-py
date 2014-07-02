@@ -1,4 +1,4 @@
-from kuankr_utils.datetime import *
+from kuankr_utils.date_time import *
 
 def test_simple():
     print datetime.now().isoformat()

@@ -1,12 +1,14 @@
-import bson
 import re
-import bson.objectid
+import bson
 
+#TODO: remove
+"""
 from kuankr_utils.json import register_encoder
 
-@register_encoder(bson.objectid.ObjectId)
+@register_encoder(bson.ObjectId)
 def encode_objectid(obj):
     return str(obj)
+"""
 
 OBJECTID_PATTERN = re.compile('[a-z0-9]{24}')
 
