@@ -1,11 +1,10 @@
 import bson
 import re
-import bson
 import bson.objectid
 
 from kuankr_utils.json import register_encoder
 
-@register_encoder(bson.objectid)
+@register_encoder(bson.objectid.ObjectId)
 def encode_objectid(obj):
     return str(obj)
 

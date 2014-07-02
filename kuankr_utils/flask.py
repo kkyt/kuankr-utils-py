@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import os
+import types
 
 from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
 from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 
-from kuankr_utils import log, debug
+from kuankr_utils import debug
 from kuankr_utils.logstash import log as logstash_log
 
 from kuankr_utils import api_json

@@ -8,6 +8,7 @@ import datetime
 import functools
 import decimal
 
+from kuankr_utils import log
 from kuankr_utils.datetime import with_tzinfo
 
 #ref: aspen/json_
@@ -15,6 +16,8 @@ from kuankr_utils.datetime import with_tzinfo
 _encoders = {}
 
 def register_encoder(cls):
+    log.debug('kuankr_utils.json.register_encoder: %s' % cls.__name__)
+
     global _encoders
     def inner(encoder):
         _encoders[cls] = encoder
@@ -45,10 +48,10 @@ class Encoder(json.JSONEncoder):
 
         return super(Encoder, self).default(obj)
 
-def dumps(x, pretty=False, **kwargs):
+def dumps(x, pretty=False, ensure_ascii=False, **kwargs):
     if pretty:
         kwargs['indent'] = '  '
-    return json.dumps(x, cls=Encoder, **kwargs)
+    return json.dumps(x, cls=Encoder, ensure_ascii=ensure_ascii, **kwargs)
 
 def loads(x):
     if isinstance(x, types.GeneratorType):

@@ -17,9 +17,7 @@ _single_leading_underscore: weak "internal use" indicator. E.g. from M import * 
 """
 
 __all__ = """
-    INFO ERROR WARN DEBUG DEBUG2 DEBUG3
     info error warn debug debug2 debug3
-    INFO_ ERROR_ WARN_ DEBUG_
     info_ error_ warn_ debug_
 """.split()
 
@@ -109,21 +107,24 @@ colored_formatter = ColoredFormatter(
         }
 )
 
+
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(colored_formatter)
 
 logger = logging.getLogger()
 logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
-info = INFO = logger.info
-error = ERROR = logger.error
-warn = WARN = logger.warn
-debug = DEBUG = logger.debug
-debug2 = DEBUG2 = logger.warn
-debug3 = DEBUG3 = logger.error
+info = logger.info
+error = logger.error
+warn = logger.warn
+debug = logger.debug
+debug2 = logger.warn
+debug3 = logger.error
 
 def _empty(*args, **kwargs): pass
 
-debug_ = info_ = warn_ = error_ = DEBUG_ = INFO_ = WARN_ = ERROR_ = MSG_ = _empty
+debug_ = info_ = warn_ = error_ = _empty
+
 
