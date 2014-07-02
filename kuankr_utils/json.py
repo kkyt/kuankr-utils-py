@@ -38,7 +38,7 @@ def encode_generator(obj):
 
 class Encoder(json.JSONEncoder):
     def default(self, obj):
-        if hasattr(obj, 'as_json'):
+        if hasattr(obj, 'as_json') and hasattr(obj.as_json, '__call__'):
             return obj.as_json()
 
         c = obj.__class__

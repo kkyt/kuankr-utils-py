@@ -30,6 +30,12 @@ class Doc(Document):
     def remove(self, query):
         self.collection.remove(query)
 
+    @classmethod
+    def create(cls, d):
+        x = cls()
+        x.update(d)
+        return x
+
 class HasName(Document):
     structure = {
         'name': basestring,
