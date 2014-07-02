@@ -1,4 +1,4 @@
-from kuankr_utils.logger.logstash import log
+from kuankr_utils.logstash import log
 
 def test_simple():
     log.info('hello')

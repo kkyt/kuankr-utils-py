@@ -1,4 +1,5 @@
 # coding: utf8
+from __future__ import absolute_import, unicode_literals
 
 #cat flask-api/flask_api/status.py 
 """
@@ -9,8 +10,6 @@ See RFC 2616 and RFC 6585.
 RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 RFC 6585: http://tools.ietf.org/html/rfc6585
 """
-from __future__ import unicode_literals
-
 
 def is_informational(code):
     return code >= 100 and code <= 199

@@ -6,9 +6,7 @@ from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
 from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 
-from pyutils import log, debug
-from pyutils import type_utils
-
+from kuankr_utils import log, debug
 from kuankr_utils.logstash import log as logstash_log
 
 from kuankr_utils import api_json
@@ -76,7 +74,7 @@ class API(Flask, APIMixin):
     def convert_response(self, x):
         if isinstance(x, (dict,list)):
             x = api_json.dumps(x)
-        elif type_utils.is_generator(x):
+        elif isinstance(x, types.GeneratorType):
             x = stream_with_context(x)
             x = api_json.dumps(x)
             x = self.response_class(x)

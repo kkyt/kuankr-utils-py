@@ -1,21 +1,27 @@
-from pyutils import log, debug, type_utils
-from pyutils import multi_json as json
+from __future__ import absolute_import
+
+import six
+import types
+
+from kuankr_utils import json
 
 def dumps(x, pretty=True):
-    if isinstance(x, type_utils.string_types):
+    #returns string as it is
+    if isinstance(x, six.string_types):
         return x
-    elif type_utils.is_generator(x):
+    elif isinstance(x, types.GeneratorType):
         #non-pretty dump for stream
+        #NOTE: don't add line end here
         return (dumps(r, pretty=False) for r in x)
     else:
         if pretty:
-            return json.pretty_dumps(x)
+            return json.dumps(x, pretty=True)
         else:
-            #add line end
+            #NOTE: add line end here
             return json.dumps(x) + '\n'
 
 def loads(x):
-    if type_utils.is_generator(x):
+    if isinstance(x, types.GeneratorType):
         return (json.loads(r) for r in x)
     else:
         return json.loads(x)
