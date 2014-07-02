@@ -5,8 +5,20 @@ import __builtin__
 import simplejson as json
 import types
 
-from kuankr_utils import log
+from kuankr_utils import log, debug
 from kuankr_utils import module
+
+class ExampleObj(object):
+    def __init__(self, a, b=3):
+        self.a = a
+        self.b = b
+        self.c = a*b
+
+    def __eq__(self, o):
+        return self.a == o.a and self.b == o.b and self.c == o.c 
+
+def example_func(a, b=3):
+    return a*b
 
 class Encoder(json.JSONEncoder):
     def default(self, obj):
@@ -25,7 +37,7 @@ class Encoder(json.JSONEncoder):
                 r['__state__'] = obj.__getstate__()
             else:
                 r['__dict__'] = obj.__dict__
-        reutrn r
+        return r
 
 def dumps(obj, **kwargs):
     return json.dumps(obj, cls=Encoder, **kwargs)
@@ -51,7 +63,7 @@ def _new_instance(cls):
 
 def decode(d):
     if isinstance(d, dict):
-        if '__class__' in d:
+        if '__class__' in d or '__name__' in d:
             m = d.get('__module__')
             if m is None:
                 code = d.get('__code__')
@@ -60,21 +72,23 @@ def decode(d):
                 else:
                     m = module.import_from_code(code)
             else:
-                m = __import__(m)
+                m = module.get_module(m)
 
             if '__name__' in d:
-                return getattr(m, d['__name__']
+                return getattr(m, d['__name__'])
             else:
                 cls = getattr(m, d['__class__'])
                 if '__state__' in d:
                     obj = _new_instance(cls)
                     obj.__setstate__(decode(d['__state__']))
                 elif '__dict__' in d:
+                    obj = _new_instance(cls)
                     obj.__dict__.update(decode(d['__dict__']))
                 else:
                     args = decode(d.get('__args__', []))
                     kwargs = decode(d.get('__kwargs__', {}))
-                    return cls(*args, **kwargs)
+                    obj = cls(*args, **kwargs)
+                return obj
         else:
             for k in d:
                 d[k] = decode(d[k])

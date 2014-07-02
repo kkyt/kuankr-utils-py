@@ -3,6 +3,7 @@ import sys
 def get_module(module):
     m = sys.modules.get(module)
     if m is not None:
+        #NOTE: __import__('a.b') returns module a
         __import__(module)
         m = sys.modules[module]
     return m
