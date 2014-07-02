@@ -1,4 +1,5 @@
 import sys
+import imp
 
 def get_module(module):
     m = sys.modules.get(module)

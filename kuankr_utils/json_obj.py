@@ -1,5 +1,4 @@
 import sys
-import imp
 import __builtin__
 
 import simplejson as json
