@@ -1,9 +1,17 @@
 import os
+from werkzeug.wsgi import DispatcherMiddleware
 
 #NOTE: patch_all before all others
 from gevent import monkey; monkey.patch_all()
 
 from kuankr_utils import log, debug
+
+def create_app(api):
+    version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
+    app = DispatcherMiddleware(None, {
+        '/' + version: api
+    })
+    return app
 
 def run_wsgi(name, app, default_port=80, server='gevent'):
     port = os.environ.get('%s_PORT' % name.upper(), default_port)

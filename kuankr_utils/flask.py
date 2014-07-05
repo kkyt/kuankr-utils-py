@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import os
 import types
+from datetime import datetime
+import json
 
 from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
@@ -46,6 +48,30 @@ class APIMixin(object):
 
 class APIBlueprint(Blueprint, APIMixin):
     pass
+
+base_api = APIBlueprint('base_api', __name__)
+
+@base_api.get('/_ping')
+def ping():
+    return { 
+        'status': 'ok', 
+        'message': 'pong', 
+        'time': datetime.now()
+    }
+
+@base_api.get('/_schema')
+def schema():
+    s = os.environ.get('KUANKR_SERVICE')
+    schema = None
+
+    if s:
+        schema = os.environ.get("%s_SCHEMA" % s.upper())
+        if schema:
+          f = open(schema)
+          schema = json.load(f.read())
+          f.close()
+    return schema
+
 
 class API(Flask, APIMixin):
     response_class = JsonResponse
