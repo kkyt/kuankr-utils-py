@@ -6,9 +6,13 @@ from gevent import monkey; monkey.patch_all()
 
 from kuankr_utils import log, debug
 
+def not_found(environ, start_response):
+    start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
+    return ['Not Found']
+
 def create_app(api):
     version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
-    app = DispatcherMiddleware(None, {
+    app = DispatcherMiddleware(not_found, {
         '/' + version: api
     })
     return app

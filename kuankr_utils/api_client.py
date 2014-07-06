@@ -34,3 +34,6 @@ class ApiClient(object):
         self.api = heroics.client.Client(schema, url, options)
         self.http = self.api._http_client
 
+    def set_headers(self, headers):
+        self.http.set_headers(headers)
+

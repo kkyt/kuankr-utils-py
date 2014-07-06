@@ -25,19 +25,17 @@ class HttpClient(object):
     def __init__(self, base, headers=None, options=None, async_send=False):
         self.base = base
         self.options = options or {}
-        self.headers = headers or {}
 
         h = {'content-type': 'application/json'}
-        dicts.reverse_update(self.headers, h)
+        dicts.reverse_update(headers, h)
 
-        ses = requests.Session()
-        ses.headers.update(self.headers)
+        self.session = ses = requests.Session()
+        self.set_headers(headers)
         ses.hooks.update(response=response_hook)
         if async_send:
             #NOTE: must patch_all, otherwise it will hangs
             from gevent import monkey; monkey.patch_all()
             ses.mount('http://', HTTPStreamAdapter())
-        self.session = ses
 
     def http(self, method, path, data=None, params=None, stream=False, **kwargs):
         #NOTE: stream is for response body, not for request body
@@ -66,6 +64,10 @@ class HttpClient(object):
             log.debug('%s' % flat_dict_repr(r.headers))
             log.debug('\n%s' % r.content)
             return r.json()
+
+    def set_headers(self, headers):
+        if headers:
+            self.session.headers.update(headers)
 
     def get(self, path, params=None, **kwargs):
         #TODO: params

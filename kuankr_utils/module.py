@@ -1,9 +1,11 @@
 import sys
 import imp
 
+from kuankr_utils import log, debug
+
 def get_module(module):
     m = sys.modules.get(module)
-    if m is not None:
+    if m is None:
         #NOTE: __import__('a.b') returns module a
         __import__(module)
         m = sys.modules[module]
