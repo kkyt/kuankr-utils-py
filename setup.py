@@ -34,6 +34,7 @@ setup(
         "mongokit",
         "flask",
         "requests",
+        "colorlog",
         "pymongo",
         "python-logstash",
         "Flask-API",
