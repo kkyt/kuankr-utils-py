@@ -99,7 +99,7 @@ class API(Flask, APIMixin):
         return self.make_response((r, status_code))
 
     def convert_response(self, x):
-        if isinstance(x, (dict,list)):
+        if x is None or isinstance(x, (dict,list)):
             x = api_json.dumps(x)
         elif isinstance(x, types.GeneratorType):
             x = stream_with_context(x)
@@ -111,8 +111,6 @@ class API(Flask, APIMixin):
         if rv is None:
             if request.method == 'GET':
                 return self.make_json_error(NotFound())
-            else:
-                rv = {}
                 
         if isinstance(rv, tuple):
             rv = list(rv)
