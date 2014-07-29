@@ -84,9 +84,9 @@ def decode(d):
                     obj = _new_instance(cls)
                     obj.__dict__.update(decode(d['__dict__']))
                 else:
-                    args = decode(d.get('__args__', []))
-                    kwargs = decode(d.get('__kwargs__', {}))
-                    obj = cls(*args, **kwargs)
+                    arguments = decode(d.get('__arguments__', []))
+                    options = decode(d.get('__options__', {}))
+                    obj = cls(*args, **opts)
                 return obj
         else:
             for k in d:
@@ -100,7 +100,7 @@ def decode(d):
     else:
         return d
 
-def decode_from_config(d):
+def decode_conf(d):
     keys = 'module name class state dict code args kwargs'.split()
     x = {}
     for k in keys:
