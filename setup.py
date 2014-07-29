@@ -59,6 +59,9 @@ setup(
 
         #log
         "python-logstash",
+
+        #gevent
+        "gevent>=1.0",
     ],
 
     dependency_links=[
