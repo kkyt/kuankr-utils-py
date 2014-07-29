@@ -30,15 +30,35 @@ setup(
     ],
 
     install_requires=[
-        "blinker",
-        "mongokit",
-        "flask",
-        "requests",
+        #basic
+        "six",
+        "simplejson",
+
+        #datetime
+        "pytz",
+        "tzlocal",
+        "aniso8601",
+
+        #test
+        "pytest",
         "colorlog",
-        "pymongo",
-        "python-logstash",
+        "colorama",
+
+        #flask
+        "blinker",
+        "flask",
         "Flask-API",
         "Flask-MongoEngine",
+
+        #http
+        "requests",
+
+        #mongodb
+        "mongokit",
+        "pymongo",
+
+        #log
+        "python-logstash",
     ],
 
     dependency_links=[

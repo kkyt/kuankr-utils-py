@@ -7,7 +7,6 @@ import calendar
 
 import pytz
 import tzlocal
-import aniso8601
 
 from aniso8601 import parse_date, parse_time, parse_datetime, parse_interval, parse_duration, parse_repeating_interval
 
