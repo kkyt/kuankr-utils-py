@@ -61,15 +61,11 @@ def ping():
 
 @base_api.get('/_schema')
 def schema():
-    s = os.environ.get('KUANKR_SERVICE')
-    schema = None
-
-    if s:
-        schema = os.environ.get("%s_SCHEMA" % s.upper())
-        if schema:
-          f = open(schema)
-          schema = json.load(f.read())
-          f.close()
+    schema = os.environ.get("KUANKR_SCHEMA")
+    if schema:
+        f = open(schema)
+        schema = json.loads(f.read())
+        f.close()
     return schema
 
 
