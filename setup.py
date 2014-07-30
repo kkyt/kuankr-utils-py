@@ -62,6 +62,7 @@ setup(
 
         #gevent
         "gevent>=1.0",
+        "gunicorn"
     ],
 
     dependency_links=[
