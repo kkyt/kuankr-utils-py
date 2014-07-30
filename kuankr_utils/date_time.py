@@ -61,6 +61,10 @@ def to_str(dt):
     dt = localize(dt)
     return dt.isoformat()
 
+def to_date_str(dt):
+    n = len('2012-01-01')
+    return to_str(dt)[:n]
+
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
         return parse_datetime(dt)
