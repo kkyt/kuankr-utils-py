@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import json
+import requests
 
 import heroics.client
 
@@ -14,8 +15,13 @@ class ApiClient(object):
 
         url = env['%s_URI' % service.upper()]
         schema = env['%s_SCHEMA' % service.upper()]
-        f = open(schema)
-        schema = json.loads(f.read())
+        if os.path.exists(schema):
+            f = open(schema)
+            s = f.read()
+        else:
+            r = requests.get(url + '/_schema')
+            s = r.content
+        schema = json.loads(s)
         f.close()
 
         #schema = Heroics::Schema.new schema
