@@ -18,11 +18,11 @@ class ApiClient(object):
         if os.path.exists(schema):
             f = open(schema)
             s = f.read()
+            f.close()
         else:
             r = requests.get(url + '/_schema')
             s = r.content
         schema = json.loads(s)
-        f.close()
 
         #schema = Heroics::Schema.new schema
         headers = {}
