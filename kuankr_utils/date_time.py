@@ -70,11 +70,16 @@ def to_date_str(dt):
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
         if len(dt)<=DATE_LEN:
-            return parse_date(dt)
+            return to_datetime(parse_date(dt))
         else:
             return parse_datetime(dt)
+
+    elif isinstance(dt, date):
+        return datetime(dt.year, dt.month, dt.day)
+
     elif isinstance(dt, datetime):
         return dt
+
     else:
         return None
 
