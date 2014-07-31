@@ -10,6 +10,9 @@ import tzlocal
 
 from aniso8601 import parse_date, parse_time, parse_datetime, parse_interval, parse_duration, parse_repeating_interval
 
+DATE_LEN = len('2012-01-01')
+#DATETIME_LEN = len('2012-01-01T00:00:00+08:00')
+
 """
 tzinfo是关于时区信息的类
 tzinfo是一个抽象类，所以不能直接被实例化
@@ -62,12 +65,14 @@ def to_str(dt):
     return dt.isoformat()
 
 def to_date_str(dt):
-    n = len('2012-01-01')
-    return to_str(dt)[:n]
+    return to_str(dt)[:DATE_LEN]
 
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
-        return parse_datetime(dt)
+        if len(dt)<=DATE_LEN:
+            return parse_date(dt)
+        else:
+            return parse_datetime(dt)
     elif isinstance(dt, datetime):
         return dt
     else:
