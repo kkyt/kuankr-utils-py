@@ -14,14 +14,16 @@ class ApiClient(object):
         env = os.environ
 
         url = env['%s_URI' % service.upper()]
-        schema = env['%s_SCHEMA' % service.upper()]
-        if os.path.exists(schema):
+        schema = env.get('%s_SCHEMA' % service.upper())
+        if schema and os.path.exists(schema):
             f = open(schema)
             s = f.read()
             f.close()
         else:
             r = requests.get(url + '/_schema')
             s = r.content
+        if not s:
+            raise Exception("no schema found for service: %s" % service)
         schema = json.loads(s)
 
         #schema = Heroics::Schema.new schema
