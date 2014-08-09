@@ -46,6 +46,12 @@ class HttpClient(object):
             log.debug('\nnull')
         else:
             data = json.dumps(data)
+
+            #TODO
+            #gevent socket cannot send unicode
+            if isinstance(data, unicode):
+               data = data.encode('utf8')
+
             log.debug('\n%s' % data)
 
         m = getattr(self.session, method)
