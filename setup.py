@@ -59,6 +59,7 @@ setup(
 
         #log
         "python-logstash",
+        "raven",
 
         #gevent
         "gevent>=1.0",

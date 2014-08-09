@@ -69,6 +69,10 @@ def schema():
     return schema
 
 
+@base_api.get('/_test/error')
+def error():
+    raise Exception(request.data)
+
 class API(Flask, APIMixin):
     response_class = JsonResponse
 
@@ -77,6 +81,8 @@ class API(Flask, APIMixin):
 
         for code in default_exceptions.iterkeys():
             self.error_handler_spec[None][code] = self.make_json_error
+
+        self.sentry = setup_sentry(self)
 
     def make_json_error(self, ex):
         if isinstance(ex, HTTPException):
@@ -132,6 +138,16 @@ class API(Flask, APIMixin):
         print debug.pretty_traceback()
         return super(API, self).handle_exception(exc_info)
         
+
+def setup_sentry(app):
+    from raven.contrib.flask import Sentry
+    dsn = os.environ.get('SENTRY_DSN')
+    if not dsn:
+        return None
+    app.config['SENTRY_DSN'] = dsn
+    sentry = Sentry(app)
+    return sentry
+
 def request_json_body():
     return request.get_json(force=True, silent=True)
     #return api_json.loads(request.data)
