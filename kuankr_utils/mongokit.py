@@ -18,25 +18,29 @@ def register_models(db, *models):
 
 
 class Doc(Document):
+    '''
+    NOTE: 
+        x = Doc(d) didn't create default_values
+        should use: x = Doc(); x.update(d);
+    '''
     structure = {
         'updated_at': datetime,
+        'created_at': datetime,
         'uuid': uuid.UUID,
     }
     default_values = {
         'uuid': uuid.uuid4,
+        'created_at': date_time.now,
         'updated_at': date_time.now
     }
-    required_fields = [ 'uuid', 'updated_at' ]
+    required_fields = [ 'uuid', 'updated_at', 'created_at' ]
 
     def remove(self, query):
         self.collection.remove(query)
 
-    @classmethod
-    def create(cls, d):
-        #NOTE: x = cls(d) didn't create default_values
-        x = cls()
+    def create(self, d):
+        x = self()
         x.update(d)
-        x.save()
         return x
 
     def put_by_id(self, id, doc):
@@ -44,7 +48,8 @@ class Doc(Document):
         if d is None:
             doc['_id'] = id
             d = self.create(doc)
-        d.update(doc)
+        else:
+            d.update(doc)
         d.save()
         return d
 
@@ -78,6 +83,13 @@ class HasName(Document):
             w.update(where)
         self.collection.remove(w)
 
+    def update_by_id_or_name(self, id_or_name, doc, where=None):
+        r = self.find_by_id_or_name(id_or_name, where)
+        if r is not None:
+            r.update(doc)
+            r.save()
+        return r
+        
     def put_by_id_or_name(self, id_or_name, doc, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
             d = self.find_one(id=id_or_name)
@@ -108,32 +120,41 @@ class HasApp(Document):
     default_values = {
     }
     required_fields = [
-        'app'
     ]
     indexes = [{
         'fields': 'app'
     }]
 
     def validate(self, *args, **kwargs):
-        if not 'app' in self:
-            a = self['name'].split('.')
-            assert len(a)>=3
-            self['app'] = '.'.join(a[:2])
-        else:
-            assert self['name'].startswith(self['app'] + '.')
-
         super(HasApp, self).validate(*args, **kwargs)
 
+        #NOTE: not working: `if not 'app' in self`
+        if not self.get('app'):
+            a = self['name'].split('.')
+            self['app'] = '.'.join(a[:2])
+
+        a = self['name'].split('.')
+        assert len(a)>=3
+
+        b = self['app'].split('.')
+        assert len(b)==2
+
+        assert a[0]==b[0] and a[1]==b[1]
+
+
 class HasCodeObject(Document):
-    structure = {
-        'object': {
+    '''
+        object: {
             'class': basestring,
             'module': basestring,
             'name': basestring,
             'arguments': list,
             'options': dict,
             'source_code': basestring,
-        },
+        }
+    '''
+    structure = {
+        'object': dict,
         'language': basestring,
         'runtime': basestring,
     }
@@ -142,7 +163,8 @@ class HasCodeObject(Document):
         'runtime': 'CPython2.7',
     }
     required_fields = [
-        'object'
+        #'object.class',
+        #'object.module'
     ]
     indexes = [{
         'fields': 'language'
