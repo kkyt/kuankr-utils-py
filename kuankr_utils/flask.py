@@ -9,7 +9,7 @@ from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
 from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 
-from kuankr_utils import debug
+from kuankr_utils import log, debug
 from kuankr_utils.logstash import log as logstash_log
 
 from kuankr_utils import api_json
@@ -73,6 +73,15 @@ def schema():
 def error():
     raise Exception(request.data)
 
+def headers_line(headers):
+    return ' '.join(map(lambda a: '%s=%s' % a, headers.items()))
+
+def request_line(req):
+    return req.method + ' ' + req.url + '\n' + headers_line(req.headers)
+    
+def response_line(resp):
+    return headers_line(resp.headers)
+
 class API(Flask, APIMixin):
     response_class = JsonResponse
 
@@ -122,15 +131,25 @@ class API(Flask, APIMixin):
             rv = self.convert_response(rv)
         r = super(API, self).make_response(rv)
 
-        if os.environ.get('WSGI_DEBUG_LOGGER')=='1':
-            #TODO
+        if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
+            #TODO chunked encoding
+            if request.headers.get('transfer_encoding') != 'chunked':
+                req = request.data
+            else:
+                req = '<stream>'
+
+            if not r.is_streamed:
+                resp = ''.join(r.response)
+            else:
+                resp = '<stream>'
+
             rec = {
-                'request': request.data,
-                'response': r
+                'request': req,
+                'response': resp
             }
             logstash_log.info('api_call', extra=rec)
-            print request.data
-            print r
+            log.debug('api_request\n' + request_line(request)+'\n'+req)
+            log.info('api_response\n' + response_line(r)+'\n'+resp)
 
         return r
 
