@@ -93,20 +93,58 @@ class ColoredFormatter (Formatter):
             message = str_abbr(message, LOG_MSG_MAX_LEN)
         return message
 
+if os.environ.get('KUANKR_UTILS_LOG_BOLD')=='1':
+    log_colors={
+        'DEBUG':    'bold_green',
+        'INFO':     'bold_cyan',
+        'WARNING':  'bold_yellow',
+        'ERROR':    'bold_red',
+        'CRITICAL': 'bold_red',
+    }
+else:
+    log_colors={
+        'DEBUG':    'green',
+        'INFO':     'cyan',
+        'WARNING':  'yellow',
+        'ERROR':    'red',
+        'CRITICAL': 'red',
+    }
+
 colored_formatter = ColoredFormatter(
         #"%(asctime)s %(levelname)5s %(filename)64s%(lineno)4d %(log_color)s%(message)s%(reset)s",
         "%(green)s%(asctime)s %(white)s%(pathname2)24s%(cyan)s%(lineno)4d %(log_color)s[%(abbr_levelname)s] %(message)s%(reset)s",
         datefmt="%m-%d %H:%M:%S",
         reset=True,
-        log_colors={
-            'DEBUG':    'bold_green',
-            'INFO':     'bold_cyan',
-            'WARNING':  'bold_yellow',
-            'ERROR':    'bold_red',
-            'CRITICAL': 'bold_red',
-        }
+        log_colors=log_colors
 )
 
+
+def p(*args, **kwargs):
+    '''
+    log.p(1, [1,2,3], a=3, b='abc', color='green', bg_color='red')
+    log.p(1, [1,2,3], a=3, b='abc', color='yellow')
+    '''
+
+    color = None
+    bg_color = None
+
+    if 'color' in kwargs:
+        color = kwargs['color']
+        del kwargs['color']
+
+    if 'bg_color' in kwargs:
+        bg_color = kwargs['bg_color']
+        del kwargs['bg_color']
+
+    d = dict(escape_codes)
+    d['message'] = ' '.join(map(str,args))
+    d['info'] = ' '.join(map(lambda a: '%s=%s' % a, kwargs.items()))
+    fmt = '%(message)s %(info)s%(reset)s'
+    if color:
+        fmt = '%('+color+')s' + fmt
+    if bg_color:
+        fmt = '%(bg_'+bg_color+')s' + fmt
+    print fmt % d
 
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
