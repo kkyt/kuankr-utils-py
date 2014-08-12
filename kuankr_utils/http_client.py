@@ -1,5 +1,5 @@
+#coding: utf8
 from __future__ import absolute_import
-
 
 import requests
 
@@ -68,7 +68,8 @@ class HttpClient(object):
             return g()
         else:
             log.debug('%s' % flat_dict_repr(r.headers))
-            log.debug('\n%s' % r.content)
+            s = r.content
+            log.debug('\n%s' % s)
             return r.json()
 
     def set_headers(self, headers):

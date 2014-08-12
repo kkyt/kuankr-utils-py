@@ -160,12 +160,14 @@ class API(Flask, APIMixin):
 
 def setup_sentry(app):
     from raven.contrib.flask import Sentry
+    from kuankr_utils import sentry
     dsn = os.environ.get('SENTRY_DSN')
     if not dsn:
         return None
     app.config['SENTRY_DSN'] = dsn
-    sentry = Sentry(app)
-    return sentry
+    client = Sentry(app)
+    sentry.set_client(client)
+    return client
 
 def request_json_body():
     return request.get_json(force=True, silent=True)

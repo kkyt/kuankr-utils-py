@@ -1,6 +1,14 @@
+#coding: utf8
+
+from __future__ import absolute_import, unicode_literals
+
+#http://stackoverflow.com/questions/21129020/how-to-fix-unicodedecodeerror-ascii-codec-cant-decode-byte
+import sys  
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
 import logging
 import os
-import sys
 import traceback
 import inspect
 
@@ -160,6 +168,11 @@ warn = logger.warn
 debug = logger.debug
 debug2 = logger.warn
 debug3 = logger.error
+
+def exception(msg, *args, **kwargs):
+    from .sentry import capture_exception
+    logger.exception(msg, *args, **kwargs)
+    capture_exception()
 
 def _empty(*args, **kwargs): pass
 
