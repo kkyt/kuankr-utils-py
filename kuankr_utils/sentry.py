@@ -7,7 +7,7 @@ def create_client():
     e = os.environ
     return raven.Client(
         dsn=e.get('SENTRY_DSN'),
-        include_paths=e.get('SENTRY_INCLUDE_PATHS', '').split(',')
+        include_paths=e.get('SENTRY_INCLUDE_PATHS', '').split(','),
         exclude_paths=e.get('SENTRY_EXCLUDE_PATHS', '').split(','),
         servers=e.get('SENTRY_SERVERS'),
         name=e.get('SENTRY_NAME'),
