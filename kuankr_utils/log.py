@@ -26,6 +26,7 @@ _single_leading_underscore: weak "internal use" indicator. E.g. from M import * 
 
 __all__ = """
     info error warn debug debug2 debug3
+    exception exception_
     info_ error_ warn_ debug_
 """.split()
 
@@ -176,6 +177,6 @@ def exception(msg, *args, **kwargs):
 
 def _empty(*args, **kwargs): pass
 
-debug_ = info_ = warn_ = error_ = _empty
+debug_ = info_ = warn_ = error_ = exception_ = _empty
 
 
