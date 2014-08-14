@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 
+import os
 import six
 from datetime import datetime, timedelta, time, date, tzinfo
 import calendar
@@ -34,10 +35,11 @@ class UTC(tzinfo):
 def localzone():
     #TODO
     #NOTE: 在docker或VM里运行时,如果镜像没设好local zone,就会出错, 所以直接写死成 UTC8(Asia/Shanghai)
-    #return tzlocal.get_localzone() 
-
-    #return UTC(8) #don't support localize
-    return pytz.timezone('Asia/Shanghai')
+    if not os.environ.get('TZ'):
+        #return UTC(8) #don't support localize
+        return pytz.timezone('Asia/Shanghai')
+    else:
+        return tzlocal.get_localzone() 
 
 def utcnow():
     return datetime.utcnow().replace(tzinfo=pytz.utc)
