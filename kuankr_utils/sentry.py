@@ -35,8 +35,13 @@ def set_client(c):
     global _sentry
     _sentry = c
 
-def capture_exception():
+def capture_exception(*args, **kwargs):
     c = get_client()
     if c is not None:
-        c.capture_exception()
+        #TODO: ignore data will raise error when use sentry outside a module
+        if not 'data' in kwargs:
+            kwargs['data'] = {
+                'modules': 'test.module'
+            }
+        c.captureException(*args, **kwargs)
 

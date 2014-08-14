@@ -172,8 +172,13 @@ debug3 = logger.error
 
 def exception(msg, *args, **kwargs):
     from .sentry import capture_exception
+    from .debug import pretty_traceback
+    tb = pretty_traceback()
+    print tb
     logger.exception(msg, *args, **kwargs)
-    capture_exception()
+    capture_exception(message=msg, extra={
+        'traceback': tb
+    })
 
 def _empty(*args, **kwargs): pass
 

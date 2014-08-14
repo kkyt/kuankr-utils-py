@@ -67,18 +67,19 @@ def to_str(dt):
 def to_date_str(dt):
     return to_str(dt)[:DATE_LEN]
 
+#ensure tzinfo
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
         if len(dt)<=DATE_LEN:
             return to_datetime(parse_date(dt))
         else:
-            return parse_datetime(dt)
+            return with_tzinfo(parse_datetime(dt))
 
     elif isinstance(dt, date):
-        return datetime(dt.year, dt.month, dt.day)
+        return with_tzinfo(datetime(dt.year, dt.month, dt.day))
 
     elif isinstance(dt, datetime):
-        return dt
+        return with_tzinfo(dt)
 
     else:
         return None
