@@ -32,7 +32,12 @@ class UTC(tzinfo):
         return timedelta(hours=self._offset)
 
 def localzone():
-    return tzlocal.get_localzone() 
+    #TODO
+    #NOTE: 在docker或VM里运行时,如果镜像没设好local zone,就会出错, 所以直接写死成 UTC8(Asia/Shanghai)
+    #return tzlocal.get_localzone() 
+
+    #return UTC(8) #don't support localize
+    return pytz.timezone('Asia/Shanghai')
 
 def utcnow():
     return datetime.utcnow().replace(tzinfo=pytz.utc)

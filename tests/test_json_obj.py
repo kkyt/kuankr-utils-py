@@ -28,9 +28,9 @@ class T(object):
     d = {
         'class': 'T',
         'code' : code,
-        'args': [8],
-        'kwargs': { 'b': 3 }
+        'arguments': [8],
+        'options': { 'b': 3 }
     }
-    x = decode_from_config(d)
+    x = decode_conf(d)
     assert x.e.c==24
 

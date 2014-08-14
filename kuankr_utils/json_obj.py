@@ -86,7 +86,7 @@ def decode(d):
                 else:
                     arguments = decode(d.get('__arguments__', []))
                     options = decode(d.get('__options__', {}))
-                    obj = cls(*args, **opts)
+                    obj = cls(*arguments, **options)
                 return obj
         else:
             for k in d:
@@ -101,7 +101,7 @@ def decode(d):
         return d
 
 def decode_conf(d):
-    keys = 'module name class state dict code args kwargs'.split()
+    keys = 'module name class state dict code arguments options'.split()
     x = {}
     for k in keys:
         if k in d:
