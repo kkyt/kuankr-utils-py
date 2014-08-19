@@ -37,6 +37,11 @@ def encode_generator(obj):
     return float(obj)
 
 class Encoder(json.JSONEncoder):
+    def encode(self, obj):
+        if hasattr(obj, 'as_json') and hasattr(obj.as_json, '__call__'):
+            obj = obj.as_json()
+        return super(Encoder, self).encode(obj)
+
     def default(self, obj):
         if hasattr(obj, 'as_json') and hasattr(obj.as_json, '__call__'):
             return obj.as_json()
@@ -51,6 +56,16 @@ class Encoder(json.JSONEncoder):
             return str(obj)
 
         return super(Encoder, self).default(obj)
+
+def as_json(obj):
+    if hasattr(obj, 'as_json') and hasattr(obj.as_json, '__call__'):
+        return obj.as_json()
+    elif isinstance(obj, dict):
+        return {k: as_json(v) for k,v in obj.items()}
+    elif isinstance(obj, list):
+        return [as_json(v) for v in obj]
+    else:
+        return obj
 
 def dumps(x, pretty=False, ensure_ascii=False, **kwargs):
     if pretty:

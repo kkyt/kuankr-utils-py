@@ -22,6 +22,7 @@ def dumps(x, pretty=True):
         #return (dumps(r, pretty=False) for r in x)
         return g(x)
     else:
+        x = json.as_json(x)
         if pretty:
             return json.dumps(x, pretty=True) + '\n'
         else:

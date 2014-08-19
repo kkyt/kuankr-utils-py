@@ -53,6 +53,13 @@ class Doc(Document):
         d.save()
         return d
 
+    def as_json(self):
+        d = dict(self)
+        if '_id' in d:
+            d['id'] = d['_id']
+            del d['_id']
+        return d
+        
 class HasName(Document):
     structure = {
         'name': basestring,

@@ -56,7 +56,6 @@ class HttpClient(object):
 
         m = getattr(self.session, method)
         r = m(self.base+path, data=data, params=params, stream=stream, **kwargs)
-        r.raise_for_status()
         if stream:
             def g():
                 #NOTE:
@@ -66,11 +65,13 @@ class HttpClient(object):
                 #work after response_hook
                 for x in r.iter_chunks():
                     yield json.loads(x)
+            r.raise_for_status()
             return g()
         else:
             log.debug('%s' % flat_dict_repr(r.headers))
             s = r.content
             log.debug('\n%s' % s)
+            r.raise_for_status()
             return r.json()
 
     def set_headers(self, headers):
