@@ -79,7 +79,7 @@ class HasName(Document):
             w = {'name': id_or_name}
             if where:
                 w.update(where)
-            return self.find_one(**w)
+            return self.find_one(w)
     
     def remove_by_id_or_name(self, id_or_name, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
@@ -109,7 +109,7 @@ class HasName(Document):
             w = {'name': id_or_name}
             if where:
                 w.update(where)
-            d = self.find_one(**w)
+            d = self.find_one(w)
             if d is None:
                 d = self.create(doc)
                 d['name'] = id_or_name
@@ -222,7 +222,7 @@ class HasApiClientName(Document):
                 w.update(where)
             if api_client is not None:
                 w['api_client'] = api_client
-            return self.find_one(**w)
+            return self.find_one(w)
     
 
 class DocService(object):

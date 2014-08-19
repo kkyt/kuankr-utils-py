@@ -17,6 +17,7 @@ from kuankr_utils import api_json
 from flask.ext.api import status
 
 from .http import HTTP_400_BAD_REQUEST
+from .http_debug import response_line, request_line
 
 class JsonResponse(Response):
     default_mimetype = 'application/json'
@@ -73,15 +74,6 @@ def schema():
 def error():
     raise Exception(request.data)
 
-def headers_line(headers):
-    return ' '.join(map(lambda a: '%s=%s' % a, headers.items()))
-
-def request_line(req):
-    return req.method + ' ' + req.url + '\n' + headers_line(req.headers)
-    
-def response_line(resp):
-    return headers_line(resp.headers)
-
 class API(Flask, APIMixin):
     response_class = JsonResponse
 
@@ -133,7 +125,7 @@ class API(Flask, APIMixin):
 
         if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
             #TODO chunked encoding
-            if request.headers.get('transfer_encoding') != 'chunked':
+            if request.headers.get('Transfer-Encoding') != 'chunked':
                 req = request.data
             else:
                 req = '<stream>'

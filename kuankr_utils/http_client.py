@@ -2,10 +2,13 @@
 from __future__ import absolute_import
 
 import requests
+import types
 
-from kuankr_utils import api_json as json
+from kuankr_utils import api_json
 from kuankr_utils import log, dicts
-from kuankr_utils.requests import response_hook, HTTPStreamAdapter
+
+from .requests import response_hook, HTTPStreamAdapter
+from .http_debug import headers_line
 
 class Resource(object):
     def __init__(self, client, path):
@@ -14,12 +17,6 @@ class Resource(object):
 
     def __getattr__(self, method):
         pass
-
-def flat_dict_repr(d):
-    if not d:
-        return ''
-    else:
-        return '; '.join('%s=%s' % (k,v) for k,v in sorted(d.items()))
 
 class HttpClient(object):
     def __init__(self, base, headers=None, options=None, async_send=False):
@@ -36,26 +33,31 @@ class HttpClient(object):
             #NOTE: must patch_all, otherwise it will hangs
             from gevent import monkey; monkey.patch_all()
             ses.mount('http://', HTTPStreamAdapter())
+            #TODO https
 
     def http(self, method, path, data=None, params=None, stream=False, **kwargs):
         #NOTE: stream is for response body, not for request body
-        log.info('%s %s %s' % (method.upper(), path, flat_dict_repr(params)))
-        log.debug('%s' % flat_dict_repr(self.session.headers))
+        log.info('%s %s %s' % (method.upper(), path, headers_line(params)))
+        log.debug('%s' % headers_line(self.session.headers))
 
         if data is None:
             log.debug('\nnull')
         else:
-            data = json.dumps(data)
+            data = api_json.dumps(data)
 
             #TODO
             #gevent socket cannot send unicode
             if isinstance(data, unicode):
                data = data.encode('utf8')
 
-            log.debug('\n%s' % data)
+            if isinstance(data, types.GeneratorType):
+                log.debug('\n<stream>')
+            else:
+                log.debug('\n%s' % data)
 
         m = getattr(self.session, method)
         r = m(self.base+path, data=data, params=params, stream=stream, **kwargs)
+        log.debug('%s' % headers_line(r.headers))
         if stream:
             def g():
                 #NOTE:
@@ -64,11 +66,11 @@ class HttpClient(object):
 
                 #work after response_hook
                 for x in r.iter_chunks():
-                    yield json.loads(x)
+                    yield api_json.loads(x)
             r.raise_for_status()
+            log.debug('\n<stream>')
             return g()
         else:
-            log.debug('%s' % flat_dict_repr(r.headers))
             s = r.content
             log.debug('\n%s' % s)
             r.raise_for_status()
