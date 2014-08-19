@@ -112,6 +112,8 @@ class HTTPStreamAdapter(HTTPAdapter):
                             low_conn.send(b'\r\n')
                             low_conn.send(i)
                             low_conn.send(b'\r\n')
+                            #must sleep to make streams LIVE
+                            gevent.sleep(0)
                         low_conn.send(b'0\r\n\r\n')
                     gevent.spawn(send_body)
 
