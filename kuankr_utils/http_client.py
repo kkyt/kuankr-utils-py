@@ -5,7 +5,7 @@ import requests
 import types
 
 from kuankr_utils import api_json
-from kuankr_utils import log, dicts
+from kuankr_utils import log, debug, dicts
 
 from .requests import response_hook, HTTPStreamAdapter
 from .http_debug import headers_line

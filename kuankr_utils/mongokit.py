@@ -224,39 +224,64 @@ class HasApiClientName(Document):
                 w['api_client'] = api_client
             return self.find_one(w)
     
+class BaseService(object):
+    def __init__(self, Model):
+        self.Model = Model
 
-class DocService(object):
-    def __init__(self, doc_class):
-        self.doc_class = doc_class
+    def create(self, d):
+        e = self.Model()
+        e.update(d)
+        e.save()
+        return e
 
-    ## basic crud
-    def create(self, doc):
-        return self.doc_class.create(doc)
-
-    def find(self, id):
-        if hasattr(self.doc_class, 'find_by_id_or_name'):
-            return self.doc_class.find_by_id_or_name(id)
+    def info(self, id):
+        if hasattr(self.Model, 'find_by_id_or_name'):
+            return self.Model.find_by_id_or_name(id)
         else:
-            return self.doc_class.find_one(id)
+            return self.Model.find_one(id)
 
     def put(self, id, doc):
-        if hasattr(self.doc_class, 'put_by_id_or_name'):
-            return self.doc_class.put_by_id_or_name(id, doc)
+        if hasattr(self.Model, 'put_by_id_or_name'):
+            return self.Model.put_by_id_or_name(id, doc)
         else:
-            return self.doc_class.put_by_id(id, doc)
+            return self.Model.put_by_id(id, doc)
 
     def update(self, id, doc):
-        d = self.put(id, doc)
-        return d
+        self.Model.update({'_id': id}, doc)
 
-    def delete(self, id):
-        d = self.find(id)
-        d.remove()
-        return d
+    def remove(self, id):
+        return self.Model.remove({'_id': id})
 
-class ApiClientDocService(object):
-    def __init__(self, doc_class, api_client=None):
-        self.doc_class = doc_class
+class ServiceWithAppName(BaseService):
+    def list(self, app=None):
+        w = {}
+        if app:
+            w['app'] = app
+        return self.Model.find(w)
+
+    def remove_all(self, app=None):
+        w = {}
+        if app:
+            w['app'] = app
+        self.Model.remove(w)
+            
+    def remove(self, id_or_name):
+        return self.Model.remove_by_id_or_name(id_or_name)
+
+    def put(self, id_or_name, d):
+        e = self.Model.put_by_id_or_name(id_or_name, d)
+        return e
+
+    def info(self, id_or_name):
+        return self.Model.find_by_id_or_name(id_or_name)
+
+    def update(self, id_or_name, d):
+        e = self.Model.update_by_id_or_name(id_or_name, d)
+        return e
+
+class ServiceWithApiClient(object):
+    def __init__(self, Model, api_client=None):
+        self.Model = Model
         self._api_client = api_client
 
     @property
@@ -266,11 +291,12 @@ class ApiClientDocService(object):
     ## basic crud
     def create(self, doc):
         doc['api_client'] = self.api_client
-        return self.doc_class.create(doc)
+        return self.Model.create(doc)
 
-    def find(self, id):
-        if hasattr(self.doc_class, 'find_by_id_or_name'):
-            return self.doc_class.find_by_id_or_name(id, api_client=self.api_client)
+    def info(self, id):
+        if hasattr(self.Model, 'find_by_id_or_name'):
+            return self.Model.find_by_id_or_name(id, api_client=self.api_client)
         else:
-            return self.doc_class.find_one(id)
+            return self.Model.find_one({'_id': id})
+
 
