@@ -29,6 +29,11 @@ setup(
     scripts=[
     ],
 
+    entry_points='''
+        [console_scripts]
+        kuankr-api=kuankr_utils.api_cli:main
+    ''',
+
     install_requires=[
         #basic
         "six",
