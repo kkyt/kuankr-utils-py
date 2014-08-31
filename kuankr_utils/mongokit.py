@@ -6,7 +6,7 @@ import copy
 import bson
 from datetime import datetime
 
-from kuankr_utils import date_time
+from kuankr_utils import log, debug, date_time
 from kuankr_utils.mongodb import OBJECTID_PATTERN
 
 from mongokit import Connection, Document
@@ -16,7 +16,11 @@ def register_models(db, *models):
         db.connection.register(model)
         model.generate_index(db[model.__collection__])
 
-
+def to_object_id(id):
+    if not isinstance(id, bson.ObjectId):
+        id = bson.ObjectId(id)
+    return id
+        
 class Doc(Document):
     '''
     NOTE: 
@@ -44,7 +48,8 @@ class Doc(Document):
         return x
 
     def put_by_id(self, id, doc):
-        d = self.find_one(id)
+        id = to_object_id(id)
+        d = self.find_by_id(id)
         if d is None:
             doc['_id'] = id
             d = self.create(doc)
@@ -52,6 +57,13 @@ class Doc(Document):
             d.update(doc)
         d.save()
         return d
+
+    def find_by_id(self, id, where=None):
+        id = to_object_id(id)
+        w = {'_id': id}
+        if where:
+            w.update(where)
+        return self.find_one(w)
 
     def as_json(self):
         d = dict(self)
@@ -72,18 +84,22 @@ class HasName(Document):
         'unique': True
     }]
 
+    def find_by_name(self, name, where=None):
+        w = {'name': name}
+        if where:
+            w.update(where)
+        return self.find_one(w)
+
     def find_by_id_or_name(self, id_or_name, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
-            return self.find_one(id=id_or_name)
+            return self.find_by_id(id_or_name)
         else:
-            w = {'name': id_or_name}
-            if where:
-                w.update(where)
-            return self.find_one(w)
+            return self.find_by_name(id_or_name, where=where)
     
     def remove_by_id_or_name(self, id_or_name, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
-            w = {'_id': id_or_name}
+            id = to_object_id(id_or_name)
+            w = {'_id': id}
         else:
             w = {'name': id_or_name}
         if where:
@@ -99,9 +115,10 @@ class HasName(Document):
         
     def put_by_id_or_name(self, id_or_name, doc, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
-            d = self.find_one(id=id_or_name)
+            id = to_object_id(id_or_name)
+            d = self.find_by_id(id)
             if d is None:
-                doc['_id'] = id_or_name
+                doc['_id'] = id
                 d = self.create(doc)
             else:
                 d.update(doc)
@@ -148,6 +165,22 @@ class HasApp(Document):
 
         assert a[0]==b[0] and a[1]==b[1]
 
+class HasTitleDesc(Document):
+    structure = {
+        'title': basestring,
+        'description': basestring,
+    }
+    required_fields = [
+        'title'
+    ]
+
+class HasTemplate(Document):
+    structure = {
+        'template': basestring,
+        'options': dict,
+    }
+    required_fields = [
+    ]
 
 class HasCodeObject(Document):
     '''
@@ -215,7 +248,7 @@ class HasApiClientName(Document):
 
     def find_by_id_or_name(self, id_or_name, api_client=None, where=None):
         if isinstance(id_or_name, bson.ObjectId) or OBJECTID_PATTERN.match(id_or_name):
-            return self.find_one(id=id_or_name)
+            return self.find_by_id(id_or_name)
         else:
             w = {'name': id_or_name}
             if where:
@@ -234,11 +267,18 @@ class BaseService(object):
         e.save()
         return e
 
-    def info(self, id):
+    def get(self, id):
         if hasattr(self.Model, 'find_by_id_or_name'):
             return self.Model.find_by_id_or_name(id)
         else:
-            return self.Model.find_one(id)
+            return self.Model.find_by_id(id)
+
+    #TODO: remove
+    def info(self, id):
+        return self.get(id)
+
+    def find_all(self, where=None):
+        return self.Model.find(where)
 
     def put(self, id, doc):
         if hasattr(self.Model, 'put_by_id_or_name'):
@@ -247,11 +287,16 @@ class BaseService(object):
             return self.Model.put_by_id(id, doc)
 
     def update(self, id, doc):
+        id = to_object_id(id)
         self.Model.update({'_id': id}, doc)
 
     def remove(self, id):
+        id = to_object_id(id)
         return self.Model.remove({'_id': id})
 
+    def remove_all(self, **options):
+        return self.Model.remove(options)
+        
 class ServiceWithAppName(BaseService):
     def list(self, app=None):
         w = {}
@@ -272,7 +317,7 @@ class ServiceWithAppName(BaseService):
         e = self.Model.put_by_id_or_name(id_or_name, d)
         return e
 
-    def info(self, id_or_name):
+    def get(self, id_or_name):
         return self.Model.find_by_id_or_name(id_or_name)
 
     def update(self, id_or_name, d):
@@ -293,10 +338,10 @@ class ServiceWithApiClient(object):
         doc['api_client'] = self.api_client
         return self.Model.create(doc)
 
-    def info(self, id):
+    def get(self, id):
         if hasattr(self.Model, 'find_by_id_or_name'):
             return self.Model.find_by_id_or_name(id, api_client=self.api_client)
         else:
-            return self.Model.find_one({'_id': id})
+            return self.Model.find_by_id(id)
 
 
