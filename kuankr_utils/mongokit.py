@@ -273,6 +273,12 @@ class BaseService(object):
         else:
             return self.Model.find_by_id(id)
 
+    def find_by_name(self, name):
+        return self.Model.find_by_name(name)
+
+    def find_by_id(self, id):
+        return self.Model.find_by_id(id)
+
     #TODO: remove
     def info(self, id):
         return self.get(id)
@@ -289,27 +295,18 @@ class BaseService(object):
     def update(self, id, doc):
         id = to_object_id(id)
         self.Model.update({'_id': id}, doc)
+        return self.find_by_id(id)
 
     def remove(self, id):
         id = to_object_id(id)
-        return self.Model.remove({'_id': id})
+        x = self.find_by_id(id)
+        self.Model.remove({'_id': id})
+        return x
 
     def remove_all(self, **options):
-        return self.Model.remove(options)
+        self.Model.remove(options)
         
-class ServiceWithAppName(BaseService):
-    def list(self, app=None):
-        w = {}
-        if app:
-            w['app'] = app
-        return self.Model.find(w)
-
-    def remove_all(self, app=None):
-        w = {}
-        if app:
-            w['app'] = app
-        self.Model.remove(w)
-            
+class ServiceWithName(BaseService):
     def remove(self, id_or_name):
         return self.Model.remove_by_id_or_name(id_or_name)
 
@@ -324,6 +321,19 @@ class ServiceWithAppName(BaseService):
         e = self.Model.update_by_id_or_name(id_or_name, d)
         return e
 
+class ServiceWithAppName(ServiceWithName):
+    def list(self, app=None):
+        w = {}
+        if app:
+            w['app'] = app
+        return self.Model.find(w)
+
+    def remove_all(self, app=None):
+        w = {}
+        if app:
+            w['app'] = app
+        self.Model.remove(w)
+            
 class ServiceWithApiClient(object):
     def __init__(self, Model, api_client=None):
         self.Model = Model
