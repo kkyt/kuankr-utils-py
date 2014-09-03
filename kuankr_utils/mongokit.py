@@ -171,7 +171,8 @@ class HasTitleDesc(Document):
         'description': basestring,
     }
     required_fields = [
-        'title'
+        #don't require title
+        #'title'
     ]
 
 class HasTemplate(Document):

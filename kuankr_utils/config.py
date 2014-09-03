@@ -21,6 +21,8 @@ def _name_to_key(filename):
 
 def load_dir(dirname):
     d = {}
+    if not os.path.isdir(dirname):
+        return d
     for subitem in os.listdir(dirname):
         if subitem.startswith('.') or subitem.startswith('_'):
             continue

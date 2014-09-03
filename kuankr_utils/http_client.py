@@ -37,7 +37,7 @@ class HttpClient(object):
 
     def http(self, method, path, data=None, params=None, stream=False, **kwargs):
         #NOTE: stream is for response body, not for request body
-        log.info('%s %s %s' % (method.upper(), path, headers_line(params)))
+        log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
         log.debug('%s' % headers_line(self.session.headers))
 
         if data is None:
