@@ -110,6 +110,15 @@ class API(Flask, APIMixin):
             x = self.response_class(x)
         return x
 
+    def preprocess_request(self):
+        if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
+            if request.headers.get('Transfer-Encoding') != 'chunked':
+                req = request.data
+            else:
+                req = '<stream>'
+            log.debug('API_REQUEST\n' + request_line(request)+'\n'+req)
+        return super(API, self).preprocess_request()
+
     def make_response(self, rv):
         if rv is None:
             if request.method == 'GET':
@@ -124,24 +133,14 @@ class API(Flask, APIMixin):
         r = super(API, self).make_response(rv)
 
         if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
-            #TODO chunked encoding
-            if request.headers.get('Transfer-Encoding') != 'chunked':
-                req = request.data
-            else:
-                req = '<stream>'
-
             if not r.is_streamed:
                 resp = ''.join(r.response)
             else:
                 resp = '<stream>'
 
-            rec = {
-                'request': req,
-                'response': resp
-            }
-            logstash_log.info('api_call', extra=rec)
-            log.debug('api_request\n' + request_line(request)+'\n'+req)
-            log.info('api_response\n' + response_line(r)+'\n'+resp)
+            #rec = { 'request': req, 'response': resp }
+            #logstash_log.info('api_call', extra=rec)
+            log.info('API_RESPONSE\n' + response_line(r)+'\n'+resp)
 
         return r
 

@@ -39,13 +39,24 @@ class Doc(Document):
     }
     required_fields = [ 'uuid', 'updated_at', 'created_at' ]
 
+    def after_create(self):
+        return
+
+    def before_save(self):
+        return
+
     def remove(self, query):
         self.collection.remove(query)
 
     def create(self, d):
         x = self()
         x.update(d)
+        x.after_create()
         return x
+
+    def save(self):
+        self.before_save()
+        return super(Doc, self).save()
 
     def put_by_id(self, id, doc):
         id = to_object_id(id)
@@ -263,8 +274,7 @@ class BaseService(object):
         self.Model = Model
 
     def create(self, d):
-        e = self.Model()
-        e.update(d)
+        e = self.Model.create(d)
         e.save()
         return e
 

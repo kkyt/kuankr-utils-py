@@ -6,6 +6,8 @@ import requests
 
 import heroics.client
 
+from . import log
+
 class ApiClient(object):
     def __init__(self, service, **options):
         self.service = service
@@ -20,7 +22,9 @@ class ApiClient(object):
             s = f.read()
             f.close()
         else:
-            r = requests.get(url + '/_schema')
+            u = url + '/_schema'
+            log.debug('GET ' + u)
+            r = requests.get(u)
             s = r.content
         if not s:
             raise Exception("no schema found for service: %s" % service)
@@ -39,6 +43,7 @@ class ApiClient(object):
             headers.update(dh)
         options['default_headers'] = headers
 
+        self.schema = schema
         self.api = heroics.client.Client(schema, url, options)
         self.http = self.api._http_client
 
