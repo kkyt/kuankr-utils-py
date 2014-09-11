@@ -30,7 +30,7 @@ __all__ = """
     info_ error_ warn_ debug_
 """.split()
 
-LOG_MSG_MAX_LEN = 1024
+LOG_MSG_MAX_LEN = 2048
 
 # The default colors to use for the debug levels
 default_log_colors =  {

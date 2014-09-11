@@ -60,7 +60,7 @@ def _new_instance(cls):
         except TypeError: # fail gracefully
             return None
 
-def decode(d):
+def decode(d, arguments=None, options=None):
     if isinstance(d, dict):
         if '__class__' in d or '__name__' in d:
             m = d.get('__module__')
@@ -84,9 +84,17 @@ def decode(d):
                     obj = _new_instance(cls)
                     obj.__dict__.update(decode(d['__dict__']))
                 else:
-                    arguments = decode(d.get('__arguments__', []))
-                    options = decode(d.get('__options__', {}))
-                    obj = cls(*arguments, **options)
+                    args = d.get('__arguments__', arguments or [])
+                    if args:
+                        args = decode(args)
+
+                    opts = d.get('__options__', {})
+                    if options:
+                        opts.update(options)
+                    if opts:
+                        opts = decode(opts)
+
+                    obj = cls(*args, **opts)
                 return obj
         else:
             for k in d:
@@ -100,11 +108,11 @@ def decode(d):
     else:
         return d
 
-def decode_conf(d):
+def decode_conf(d, arguments=None, options=None):
     keys = 'module name class state dict code arguments options'.split()
     x = {}
     for k in keys:
         if k in d:
             x['__%s__' % k] = d[k]
-    return decode(x)
+    return decode(x, arguments=arguments, options=options)
 
