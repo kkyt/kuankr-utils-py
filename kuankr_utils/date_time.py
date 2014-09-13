@@ -103,4 +103,6 @@ def to_interval(dt):
     else:
         return None
 
+def from_timestamp(t):
+    return localize(datetime.fromtimestamp(t))
 

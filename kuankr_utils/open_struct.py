@@ -28,5 +28,5 @@ class DefaultOpenStruct(dict):
             else:
                 raise AttributeError(attr)
         else:
-            return super(OpenStructDefault, self).__getattr__(attr)
+            return super(DefaultOpenStruct, self).__getattr__(attr)
 
