@@ -80,6 +80,16 @@ def today_str():
 def now_str():
     return to_str(now())
 
+def get_date(t):
+    if not t:
+        return t
+    elif isinstance(t, date):
+        return t
+    elif isinstance(t, datetime):
+        return t.date()
+    else:
+        return t[:DATE_LEN]
+
 #ensure tzinfo
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
