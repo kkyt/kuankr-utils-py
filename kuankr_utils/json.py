@@ -9,7 +9,7 @@ import functools
 import decimal
 
 from kuankr_utils import log
-from kuankr_utils.date_time import with_tzinfo
+from kuankr_utils.date_time import with_tzinfo, to_datetime
 
 #ref: aspen/json_
 
@@ -28,6 +28,11 @@ def register_encoder(cls):
 def encode_datetime(obj):
     return with_tzinfo(obj).isoformat()
     
+@register_encoder(datetime.date)
+def encode_date(obj):
+    obj = to_datetime(obj)
+    return obj.isoformat()
+
 @register_encoder(types.GeneratorType)
 def encode_generator(obj):
     return list(obj)

@@ -11,6 +11,9 @@ def test_simple():
     print now().isoformat()
     print to_str(now())
 
+def test_json():
+    print json.dumps(now().date())
+
 def test_timezone():
     t0 = now().replace(microsecond=0)
     t1 = datetime.now().replace(microsecond=0)
