@@ -50,3 +50,11 @@ class ApiClient(object):
     def set_headers(self, headers):
         self.http.set_headers(headers)
 
+_api_clients = {}
+
+def get_api_client(service, *args, **kwargs):
+    if not service in _api_clients:
+        _api_clients[service] = ApiClient(service, *args, **kwargs)
+    return _api_clients[service]
+
+

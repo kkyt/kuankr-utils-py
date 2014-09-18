@@ -22,6 +22,10 @@ from .http_debug import response_line, request_line
 class JsonResponse(Response):
     default_mimetype = 'application/json'
 
+class JsonStreamResponse(Response):
+    default_mimetype = 'application/stream+json'
+    #default_mimetype = 'text/plain'
+
 class APIMixin(object):
     def get(self, rule, **options):
         options['methods'] = ['GET']
@@ -104,19 +108,26 @@ class API(Flask, APIMixin):
     def convert_response(self, x):
         if x is None or isinstance(x, (dict,list)):
             x = api_json.dumps(x)
+
         elif isinstance(x, types.GeneratorType):
             x = stream_with_context(x)
             x = api_json.dumps(x)
-            x = self.response_class(x)
+
+            #NOTE: use custom response class
+            #x = self.response_class(x)
+            x = JsonStreamResponse(x)
         return x
 
     def preprocess_request(self):
         if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
-            if request.headers.get('Transfer-Encoding') != 'chunked':
-                req = request.data
-            else:
-                req = '<stream>'
-            log.debug('API_REQUEST\n' + request_line(request)+'\n'+req)
+            try:
+                if request.headers.get('Transfer-Encoding') != 'chunked':
+                    req = request.data
+                else:
+                    req = '<stream>'
+                log.debug('API_REQUEST\n' + request_line(request)+'\n'+req)
+            except:
+                pass
         return super(API, self).preprocess_request()
 
     def make_response(self, rv):
@@ -133,14 +144,17 @@ class API(Flask, APIMixin):
         r = super(API, self).make_response(rv)
 
         if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
-            if not r.is_streamed:
-                resp = ''.join(r.response)
-            else:
-                resp = '<stream>'
+            try:
+                if not r.is_streamed:
+                    resp = ''.join(r.response)
+                else:
+                    resp = '<stream>'
 
-            #rec = { 'request': req, 'response': resp }
-            #logstash_log.info('api_call', extra=rec)
-            log.info('API_RESPONSE\n' + response_line(r)+'\n'+resp)
+                #rec = { 'request': req, 'response': resp }
+                #logstash_log.info('api_call', extra=rec)
+                log.info('API_RESPONSE\n' + response_line(r)+'\n'+resp)
+            except:
+                pass
 
         return r
 

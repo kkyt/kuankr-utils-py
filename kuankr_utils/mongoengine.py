@@ -12,7 +12,7 @@ from mongoengine.fields import StringField, DateTimeField
 from mongoengine.base import BaseDocument
 from mongoengine.queryset.base import BaseQuerySet
 
-from pyutils import log, debug
+from kuankr_utils import log, debug
 from pyutils.serializers import simple_json
 
 from .flask import get_api_client
