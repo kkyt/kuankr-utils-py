@@ -1,14 +1,15 @@
 #coding: utf8
 from __future__ import absolute_import
 
-import requests
+import os
 import types
+import requests
 
 from kuankr_utils import api_json
 from kuankr_utils import log, debug, dicts
 
 from .requests import response_hook, HTTPStreamAdapter
-from .http_debug import headers_line
+from .http_debug import headers_line, stream_with_echo
 
 class Resource(object):
     def __init__(self, client, path):
@@ -40,19 +41,28 @@ class HttpClient(object):
         log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
         log.debug('%s' % headers_line(self.session.headers))
 
+        stream_debug = os.environ.get('KUANKR_API_STREAM_DEBUG')=='1'
+
         if data is None:
             log.debug('\nnull')
         else:
             data = api_json.dumps(data)
 
-            #TODO
-            #gevent socket cannot send unicode
-            if isinstance(data, unicode):
-               data = data.encode('utf8')
-
             if isinstance(data, types.GeneratorType):
-                log.debug('\n<stream>')
+                #TODO
+                #requests send wrong chunk size for unicoode
+                data = (x.encode('utf8') if isinstance(x, unicode) else x for x in data)
+
+                if stream_debug:
+                    data = stream_with_echo(data)
+                else:
+                    log.debug('\n<stream>')
             else:
+                #TODO
+                #gevent socket cannot send unicode
+                if isinstance(data, unicode):
+                   data = data.encode('utf8')
+
                 log.debug('\n%s' % data)
 
         m = getattr(self.session, method)
@@ -65,10 +75,14 @@ class HttpClient(object):
                 #for x in r.iter_lines(chunk_size=1):
 
                 #work after response_hook
-                for x in r.iter_chunks():
+                chunks = r.iter_chunks()
+                if stream_debug:
+                    chunks = stream_with_echo(chunks)
+                for x in chunks:
                     yield api_json.loads(x)
             r.raise_for_status()
-            log.debug('\n<stream>')
+            if not stream_debug:
+                log.debug('\n<stream>')
             return g()
         else:
             s = r.content

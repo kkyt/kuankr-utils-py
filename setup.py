@@ -68,7 +68,10 @@ setup(
 
         #gevent
         "gevent>=1.0",
-        "gunicorn"
+        "gunicorn",
+
+        #yaml
+        "PyYAML"
     ],
 
     dependency_links=[

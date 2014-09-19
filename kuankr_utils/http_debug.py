@@ -1,4 +1,6 @@
 
+from . import log
+
 def headers_line(headers):
     if not headers:
         return ''
@@ -13,3 +15,7 @@ def response_line(resp):
     return headers_line(resp.headers)
 
 
+def stream_with_echo(stream):
+    for x in stream:
+        log.debug('%s' % x)
+        yield x
