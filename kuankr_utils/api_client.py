@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import json
 import requests
+from requests.exceptions import ConnectionError
 
 import heroics.client
 
@@ -24,8 +25,21 @@ class ApiClient(object):
         else:
             u = url + '/_schema'
             log.debug('GET ' + u)
-            r = requests.get(u)
+
+            #wait until api is available
+            s = 0.1
+            while True:
+                try:
+                    r = requests.get(u)
+                    break
+                except ConnectionError as e:
+                    import gevent
+                    log.info(e)
+                    gevent.sleep(s)
+                    s *= 2
+
             s = r.content
+
         if not s:
             raise Exception("no schema found for service: %s" % service)
         schema = json.loads(s)
