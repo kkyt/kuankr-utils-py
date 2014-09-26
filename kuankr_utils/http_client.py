@@ -11,6 +11,13 @@ from kuankr_utils import log, debug, dicts
 from .requests import response_hook, HTTPStreamAdapter
 from .http_debug import headers_line, stream_with_echo
 
+
+#NOTE: remove urllib3 log
+#http://stackoverflow.com/questions/16337511/log-all-requests-from-the-python-requests-module
+import logging
+urllib3_logger = logging.getLogger('requests.packages.urllib3')
+urllib3_logger.setLevel(logging.CRITICAL)
+
 class Resource(object):
     def __init__(self, client, path):
         self.client = client
