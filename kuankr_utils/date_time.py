@@ -49,6 +49,9 @@ def now():
     # utc -> local
     return utcnow().astimezone(local_tz)
 
+def today():
+    return to_datetime(date.today())
+
 def localize(dt):
     #dt should be utc
     local_tz = localzone()
@@ -93,7 +96,13 @@ def get_date(t):
 #ensure tzinfo
 def to_datetime(dt):
     if isinstance(dt, six.string_types):
-        if len(dt)<=DATE_LEN:
+        if dt=='today':
+            return today()
+
+        elif dt=='now':
+            return now()
+
+        elif len(dt)<=DATE_LEN:
             return to_datetime(parse_date(dt))
         else:
             return with_tzinfo(parse_datetime(dt))
@@ -109,10 +118,39 @@ def to_datetime(dt):
 
 def to_interval(dt):
     if isinstance(dt, six.string_types):
-        return parse_interval(dt)
+        if dt.find('/')>=0:
+            t0, t1 = dt.split('/')
+            return (to_datetime(t0), to_datetime(t1))
+        else:
+            dt = to_datetime(dt)
+            return (dt, dt)
+    elif isinstance(dt, (list, tuple)):
+        return (dt[0], dt[1])
     else:
-        return None
+        return (dt, dt)
 
 def from_timestamp(t):
     return localize(datetime.fromtimestamp(t))
+
+#datetime range
+def to_datetime_range(s, include_stop=False, **delta):
+    is_range = isinstance(s,(list,tuple)) or isinstance(s, six.string_types) and s.find('/')>=0
+    #special case
+    if not is_range:
+        yield to_datetime(s)
+        return
+
+    if not delta:
+        delta = {'days': 1}
+    delta = timedelta(**delta)
+
+    a = to_interval(s)
+    start = a[0]
+    stop = a[1]
+
+
+    x = start
+    while x<stop or (include_stop and x==stop):
+        yield x
+        x += delta
 
