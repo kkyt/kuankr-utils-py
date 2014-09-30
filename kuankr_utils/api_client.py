@@ -34,7 +34,7 @@ class ApiClient(object):
                     break
                 except ConnectionError as e:
                     import gevent
-                    log.info(e)
+                    log.info('wait %s secs for api service: %s %s' % (s, service, url))
                     gevent.sleep(s)
                     s *= 2
 
