@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import re
+import six
 import uuid
 import copy
 import bson
@@ -44,6 +45,14 @@ class Doc(Document):
 
     def before_save(self):
         return
+
+    def auto_convert(self):
+        #NOTE: auto convert iso string to datetime
+        for k, v in self.structure.items():
+            if v==datetime:
+                x = self.get(k)
+                if isinstance(x, six.string_types):
+                    self[k] = date_time.to_datetime(x)
 
     def remove(self, query):
         self.collection.remove(query)
@@ -304,9 +313,10 @@ class BaseService(object):
             return self.Model.put_by_id(id, doc)
 
     def update(self, id, doc):
-        id = to_object_id(id)
-        self.Model.update({'_id': id}, doc)
-        return self.find_by_id(id)
+        d = self.find_by_id(id)
+        d.update(doc)
+        d.save()
+        return d
 
     def remove(self, id):
         id = to_object_id(id)
