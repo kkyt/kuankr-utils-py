@@ -5,7 +5,7 @@ import yaml
 from . import log, debug, json, cli
 from .api_client import ApiClient
 
-def run_api(method, args, file=None, data=None, doc=False):
+def run_api(method, args, file=None, data=None, doc=False, stream=False):
     a = method.split('.')
     service = resource = link = None
 
@@ -53,9 +53,17 @@ def run_api(method, args, file=None, data=None, doc=False):
                 f = open(file, 'r')
                 body = yaml.load(f.read())
                 f.close()
-            r = m(*args, **body)
+            if not stream:
+                r = m(*args, **body)
+            else:
+                r = m.as_stream(*args, **body)
 
-    cli.echo_json(r)
+    if not stream:
+        cli.echo_json(r)
+    else:
+        for x in r:
+            #cli.echo_json(x)
+            print json.dumps(x)
 
 @group()
 def kr():
