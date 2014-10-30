@@ -2,8 +2,9 @@ from __future__ import absolute_import
 
 import os
 import types
-from datetime import datetime
 import json
+from datetime import datetime
+from cStringIO import StringIO
 
 from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
@@ -123,6 +124,8 @@ class API(Flask, APIMixin):
             try:
                 if request.headers.get('Transfer-Encoding') != 'chunked':
                     req = request.data
+                    #NOTE: only needed when chunked is convert to normal request by proxy
+                    request.environ['wsgi.input'] = StringIO(req)
                 else:
                     req = '<stream>'
                 log.debug('API_REQUEST\n' + request_line(request)+'\n'+req)

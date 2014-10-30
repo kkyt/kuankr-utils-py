@@ -20,12 +20,14 @@ def _name_to_key(filename):
     a = a[-1].split('.')
     return '.'.join(a[:-1])
 
-def load_dir(dirname, params=None):
+def load_dir(dirname, params=None, ext=None):
     d = {}
     if not os.path.isdir(dirname):
         return d
     for subitem in os.listdir(dirname):
-        if subitem.startswith('.') or subitem.startswith('_'):
+        if subitem.startswith('.') or subitem.startswith('_') or subitem.endswith('~'):
+            continue
+        if ext is not None and not subitem.endswith(ext):
             continue
         subpath = os.path.join(dirname, subitem)
         if os.path.isdir(subpath):

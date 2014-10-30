@@ -43,15 +43,18 @@ class HttpClient(object):
             ses.mount('http://', HTTPStreamAdapter())
             #TODO https
 
+        self.debug = os.environ.get('HTTP_CLIENT_DEBUG_LOGGER')=='1'
+        self.stream_debug = os.environ.get('KUANKR_API_STREAM_DEBUG')=='1'
+
     def http(self, method, path, data=None, params=None, stream=False, **kwargs):
         #NOTE: stream is for response body, not for request body
-        log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
-        log.debug('%s' % headers_line(self.session.headers))
-
-        stream_debug = os.environ.get('KUANKR_API_STREAM_DEBUG')=='1'
+        if self.debug:
+            log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
+            log.debug('%s' % headers_line(self.session.headers))
 
         if data is None:
-            log.debug('\nnull')
+            if self.debug:
+                log.debug('\nnull')
         else:
             data = api_json.dumps(data)
 
@@ -60,21 +63,26 @@ class HttpClient(object):
                 #requests send wrong chunk size for unicoode
                 data = (x.encode('utf8') if isinstance(x, unicode) else x for x in data)
 
-                if stream_debug:
-                    data = stream_with_echo(data)
-                else:
-                    log.debug('\n<stream>')
+                if self.debug:
+                    if self.stream_debug:
+                        data = stream_with_echo(data)
+                    else:
+                        log.debug('\n<stream>')
             else:
                 #TODO
                 #gevent socket cannot send unicode
                 if isinstance(data, unicode):
                    data = data.encode('utf8')
 
-                log.debug('\n%s' % data)
+                if self.debug:
+                    log.debug('\n%s' % data)
 
         m = getattr(self.session, method)
         r = m(self.base+path, data=data, params=params, stream=stream, **kwargs)
-        log.debug('%s' % headers_line(r.headers))
+
+        if self.debug:
+            log.debug('%s' % headers_line(r.headers))
+
         if stream:
             def g():
                 #NOTE:
@@ -83,17 +91,18 @@ class HttpClient(object):
 
                 #work after response_hook
                 chunks = r.iter_chunks()
-                if stream_debug:
+                if self.debug and self.stream_debug:
                     chunks = stream_with_echo(chunks)
                 for x in chunks:
                     yield api_json.loads(x)
             r.raise_for_status()
-            if not stream_debug:
+            if self.debug and not self.stream_debug:
                 log.debug('\n<stream>')
             return g()
         else:
-            s = r.content
-            log.debug('\n%s' % s)
+            if self.debug:
+                s = r.content
+                log.debug('\n%s' % s)
             r.raise_for_status()
             return r.json()
 
