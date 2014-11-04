@@ -58,6 +58,7 @@ class Doc(Document):
         self.collection.remove(query)
 
     def create(self, d):
+        #NOTE: Model() doesn't work
         x = self()
         x.update(d)
         x.after_create()
