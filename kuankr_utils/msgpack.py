@@ -47,8 +47,8 @@ def ext_hook(code, data):
         log.warn('unknow msgpack ext code: %s' % code)
         return data
 
-def loads(s):
-    return msgpack.unpackb(s, ext_hook=ext_hook)
+def loads(s, encoding=None):
+    return msgpack.unpackb(s, ext_hook=ext_hook, encoding=encoding)
 
 def dumps(x):
     return msgpack.packb(x, default=default)

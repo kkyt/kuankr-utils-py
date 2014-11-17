@@ -77,7 +77,11 @@ def as_json(obj):
 def dumps(x, pretty=False, ensure_ascii=False, **kwargs):
     if pretty:
         kwargs['indent'] = '  '
-    return json.dumps(x, cls=Encoder, ensure_ascii=ensure_ascii, **kwargs)
+    s = json.dumps(x, cls=Encoder, ensure_ascii=ensure_ascii, **kwargs)
+    #ensure return raw bytes
+    if isinstance(s, unicode):
+        s = s.encode('utf8')
+    return s
 
 def dumps_ln(x, **kwargs):
     return dumps(x, **kwargs) + '\n'
