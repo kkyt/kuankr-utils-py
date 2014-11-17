@@ -77,6 +77,9 @@ def dumps(x, pretty=False, ensure_ascii=False, **kwargs):
         kwargs['indent'] = '  '
     return json.dumps(x, cls=Encoder, ensure_ascii=ensure_ascii, **kwargs)
 
+def dumps_ln(x, **kwargs):
+    return dumps(x, **kwargs) + '\n'
+
 def loads(x):
     if isinstance(x, types.GeneratorType):
         return (loads(r) for r in x)
