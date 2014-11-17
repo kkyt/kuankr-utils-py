@@ -63,20 +63,34 @@ def _new_instance(cls):
 def decode(d, arguments=None, options=None):
     if isinstance(d, dict):
         if '__class__' in d or '__name__' in d:
-            m = d.get('__module__')
-            if m is None:
-                code = d.get('__code__')
-                if code is None:
-                    m = __builtin__
-                else:
-                    m = module.import_from_code(code)
-            else:
-                m = module.get_module(m)
+            cls = d.get('__class__')
+            nam = d.get('__name__')
+            mod = d.get('__module__')
 
-            if '__name__' in d:
-                return getattr(m, d['__name__'])
+            if mod is None:
+                if cls is not None:
+                    a = cls.split('.')
+                    cls = a[-1]
+                    mod = '.'.join(a[:-1])
+
+                if nam is not None:
+                    a = nam.split('.')
+                    nam = a[-1]
+                    mod = '.'.join(a[:-1])
+
+            if mod is None:
+                code = d.get('__code__')
+                if code is not None:
+                    m = module.import_from_code(code)
+                else:
+                    m = __builtin__
             else:
-                cls = getattr(m, d['__class__'])
+                m = module.get_module(mod)
+
+            if nam is not None:
+                return getattr(m, nam)
+            else:
+                cls = getattr(m, cls)
                 if '__state__' in d:
                     obj = _new_instance(cls)
                     obj.__setstate__(decode(d['__state__']))

@@ -9,6 +9,8 @@ def load_string(text, params=None):
     return yaml.load(s)
     
 def load_file(filename, params=None):
+    if not os.path.exists(filename):
+        return None
     f = open(filename, 'r')
     s = f.read()
     c = load_string(s, params)

@@ -8,7 +8,7 @@ import datetime
 import functools
 import decimal
 
-from kuankr_utils import log
+from kuankr_utils import log, debug
 from kuankr_utils.date_time import with_tzinfo, to_datetime
 
 #ref: aspen/json_
@@ -37,9 +37,11 @@ def encode_date(obj):
 def encode_generator(obj):
     return list(obj)
 
+#NOTE: simplejson already handles Decimal
 @register_encoder(decimal.Decimal)
 def encode_generator(obj):
-    return float(obj)
+    #return float(obj)
+    return str(obj)
 
 class Encoder(json.JSONEncoder):
     def encode(self, obj):
@@ -86,3 +88,12 @@ def loads(x):
     else:
         return json.loads(x)
 
+def loads_stream(stream):
+    for s in stream:
+        yield loads(s)
+
+def dumps_stream(stream):
+    for x in stream:
+        yield dumps(x)
+
+    
