@@ -12,3 +12,16 @@ def int_floor(f, eps=EPS):
     return int(f+eps)
 
 
+#http://stackoverflow.com/questions/3498192/c-convert-double-to-float-preserving-decimal-point-precision
+'''
+double round_to_decimal(float f) {
+    char buf[42];
+    sprintf(buf, "%.7g", f); // round to 7 decimal digits
+    return atof(buf);
+}
+'''
+
+def round_float32_to_decimal(s):
+    #TODO
+    pass
+    

@@ -47,8 +47,10 @@ def ext_hook(code, data):
         log.warn('unknow msgpack ext code: %s' % code)
         return data
 
-def loads(s, encoding=None):
-    return msgpack.unpackb(s, ext_hook=ext_hook, encoding=encoding)
+def loads(s, encoding=None, unicode_errors=None):
+    if unicode_errors is None:
+        unicode_errors = 'strict'
+    return msgpack.unpackb(s, ext_hook=ext_hook, encoding=encoding, unicode_errors=unicode_errors)
 
 def dumps(x):
     return msgpack.packb(x, default=default)
@@ -76,15 +78,12 @@ def streaming_loads(s):
 """
 
 def streaming_dump(x, f):
-    if isinstance(x, types.GeneratorType):
-        for e in x:
-            f.write(dumps(e))
-    else:
-        f.write(dumps(x))
+    for e in x:
+        f.write(dumps(e))
 
 def streaming_load(f):
     unpacker = msgpack.Unpacker(f)
     for e in unpacker:
-        yield decode(e)
+        yield e
 
 

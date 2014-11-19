@@ -1,4 +1,5 @@
 
+
 from kuankr_utils.date_time import now
 from kuankr_utils.json import *
 
@@ -11,4 +12,11 @@ def test_simple():
     }]
 
     print dumps(s)
+
+def test_decimal():
+    import simplejson
+    import json
+
+    j = simplejson
+    print json.dumps([22/10.0])
 
