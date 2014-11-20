@@ -10,7 +10,8 @@ from io import BytesIO
 
 import msgpack
 
-from pyutils import datetime_utils, debug, log
+from pyutils import datetime_utils
+from kuankr_utils import log, debug
 
 try:
     import bson
@@ -20,7 +21,7 @@ except:
 
 EXT_DATETIME = 1
 
-__all__ = ['dumps', 'loads', 'load', 'dump', 'streaming_load', 'streaming_dump']
+__all__ = ['dumps', 'loads', 'load', 'dump', 'load_stream']
 
 def default(obj):
     if isinstance(obj, decimal.Decimal):
@@ -63,27 +64,33 @@ def load(f):
 
 #TODO
 """
-def streaming_dumps(x):
+def dumps_stream(x):
     if isinstance(x, types.GeneratorType):
         for e in x:
             yield dumps(e)
     else:
         yield dumps(x)
 
-def streaming_loads(s):
+def loads_stream(s):
     buf = BytesIO()
     buf.write(s)
     buf.seek(0)
     return streaming_load(buf)
 """
 
-def streaming_dump(x, f):
-    for e in x:
-        f.write(dumps(e))
-
-def streaming_load(f):
-    unpacker = msgpack.Unpacker(f)
-    for e in unpacker:
-        yield e
+def load_stream(f, ignore_error=True, **options):
+    unpacker = msgpack.Unpacker(f, **options)
+    n = 0
+    while True:
+        n += 1
+        try:
+            e = next(unpacker)
+        except StopIteration:
+            break
+        except Exception as e:
+            if ignore_error:
+                log.error('%r\n%s\n' % (e, r))
+            else:
+                raise
 
 

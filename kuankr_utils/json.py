@@ -83,8 +83,10 @@ def dumps(x, pretty=False, ensure_ascii=False, **kwargs):
         s = s.encode('utf8')
     return s
 
+'''
 def dumps_ln(x, **kwargs):
     return dumps(x, **kwargs) + '\n'
+'''
 
 def loads(x):
     if isinstance(x, types.GeneratorType):

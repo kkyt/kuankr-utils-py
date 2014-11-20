@@ -7,95 +7,117 @@ import functools
 
 from kuankr_utils import log, debug, json, msgpack
 
-class Serializer(object):
-    def __init__(self, *args, **kwargs):
-        pass
+#unified interface to josn,msgpack,yaml etc
 
-    def encode(self, x):
+class Serializer(object):
+    def __init__(self, **options):
+        self.options = options
+
+    #TODO: default to '\n'?
+    def sep(self):
+        return ''
+
+    def dumps(self, x):
         return x
 
-    def decode(self, s):
+    def loads(self, s):
         return s
 
-    def decode_stream(self, stream, ignore_error=True):
-        n = 0 
-        for x in stream:
-            n += 1
-            try:
-                yield self.decode(x)
-            except Exception as e:
-                if not ignore_error:
-                    raise
-                else:
-                    log.error('%r\n%s' % (x, e))
-
-    def encode_stream(self, stream, ignore_error=True):
-        n = 0 
-        for x in stream:
-            n += 1
-            try:
-                yield self.encode(x)
-            except Exception as e:
-                if not ignore_error:
-                    raise
-                else:
-                    log.error('%r\n%s' % (x, e))
-
-    def decode_file(self, f, ignore_error=True):
+    def loads_stream(self, stream, ignore_error=True):
         #for show in stack traceback
+        n = 0 
+        for x in stream:
+            n += 1
+            try:
+                yield self.loads(x)
+            except Exception as e:
+                if not ignore_error:
+                    raise
+                else:
+                    log.error('%r\n%s' % (x, e))
+
+    def dumps_stream(self, stream, ignore_error=True):
+        n = 0 
+        for x in stream:
+            n += 1
+            try:
+                yield self.dumps(x)
+            except Exception as e:
+                if not ignore_error:
+                    raise
+                else:
+                    log.error('%r\n%s' % (x, e))
+
+    def load(self, f):
+        return None
+
+    def dump(self, x, f):
+        f.write(self.dumps(x))
+
+    def dump_sep(self, x, f):
+        f.write(self.dumps(x) + self.sep())
+
+    def load_stream(self, f, ignore_error=True):
         n = 0 
         for line in f:
             n += 1
             try:
-                yield self.decode(line)
+                yield self.loads(line)
             except Exception as e:
                 if not ignore_error:
                     raise
                 else:
                     log.error('%r\n%s' % (line, e))
     
-    def encode_file(self, stream, f, sep='\n', ignore_error=True):
+    def dump_stream(self, stream, f, ignore_error=True):
         n = 0 
         for x in stream:
             n += 1
             try:
-                s = self.encode(x) + sep
-                f.write(s)
+                self.dump_sep(x, f)
             except Exception as e:
                 if not ignore_error:
                     raise
                 else:
-                    log.error('%r\n%s' % (line, e))
+                    log.error('%r\n%s' % (x, e))
         
 class JsonSerializer(Serializer):
-    def __init__(self, float_repr=None, **kwargs):
+    def __init__(self, float_repr=None, compact=None, **kwargs):
+        if compact is None:
+            compact = True
         if float_repr is not None:
-            #Hack globally impact
+            #NOTE: HACK globally impact
             from simplejson import encoder
             encoder.FLOAT_REPR = float_repr
+        if compact:
+            self.separators = (',',':')
             
-    def encode(self, x):
-        return json.dumps(x)
+    def dumps(self, x):
+        return json.dumps(x, separators=self.separators)
 
-    def decode(self, s):
+    def loads(self, s):
         return json.loads(s)
+
+    def sep(self):
+        return '\n'
 
 class MsgpackSerializer(Serializer):
     def __init__(self, encoding=None, unicode_errors=None):
         self.encoding = encoding
         self.unicode_errors = unicode_errors
 
-    def encode(self, x):
+    def dumps(self, x):
         return msgpack.dumps(x)
 
-    def decode(self, s):
+    def loads(self, s):
         return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
-    def decode_file(self, f, ignore_error=True):
-        return msgpack.streaming_load(f)
+    def load_stream(self, f, ignore_error=True):
+        return msgpack.load_stream(f, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
-    def encode_file(self, stream, f, sep=''):
+    def dump_stream(self, stream, f, sep=None):
         return msgpack.streaming_dump(stream, f)
+
 
 serializers = {
     None: Serializer,
@@ -107,7 +129,7 @@ encoders = {
     None: lambda x: x,
     'string': str,
     'pickle': pickle.dumps,
-    'json': json.dumps_ln,
+    'json': json.dumps,
     'msgpack': msgpack.dumps
 }
 
