@@ -1,6 +1,7 @@
 import os
 import yaml
 import jinja2
+import string
 
 from . import date_time
 
@@ -15,3 +16,10 @@ def render_jinja2(t, params=None):
     return t.render(**ps)
 
 
+def render_simple(t, params=None):
+    if not t:
+        return t
+    if params is None:
+        params = dict(os.environ)
+    t = string.Template(t)
+    return t.safe_substitute(params)
