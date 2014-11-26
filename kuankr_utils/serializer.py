@@ -125,6 +125,13 @@ serializers = {
     'msgpack': MsgpackSerializer
 }
 
+def get_serializer(s, *args, **kwargs):
+    x = serializers.get(s)
+    if x is not None:
+        x = x(*args, **kwargs)
+    return x
+
+'''
 encoders = {
     None: lambda x: x,
     'string': str,
@@ -141,12 +148,6 @@ decoders = {
     'msgpack': msgpack.loads
 }
 
-def get_serializer(s, *args, **kwargs):
-    x = serializers.get(s)
-    if x is not None:
-        x = x(*args, **kwargs)
-    return x
-
 def get_decoder(s, encoding=None):
     f = decoders.get(s)
     if encoding is not None:
@@ -156,4 +157,5 @@ def get_decoder(s, encoding=None):
 def get_encoder(s):
     f = encoders.get(s)
     return f
+'''
     

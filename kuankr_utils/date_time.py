@@ -42,36 +42,59 @@ def localzone():
         return tzlocal.get_localzone() 
 
 def utcnow():
-    return datetime.utcnow().replace(tzinfo=pytz.utc)
+    return datetime.utcnow().replace(tzinfo=utc)
 
 def now():
-    local_tz = localzone()
+    z = localzone()
     # utc -> local
-    return utcnow().astimezone(local_tz)
+    return utcnow().astimezone(z)
 
 def today():
     return to_datetime(date.today())
 
-def localize(dt):
+def localize(dt, z=None):
     #dt should be utc
-    local_tz = localzone()
+    if z is None:
+        z = localzone()
     if dt.tzinfo is None:
-        dt = local_tz.localize(dt)
-    elif dt.tzinfo != local_tz:
-        dt = dt.astimezone(local_tz)
+        dt = z.localize(dt)
+    elif dt.tzinfo != z:
+        dt = dt.astimezone(z)
     return dt
 
-def with_tzinfo(dt):
+def to_utc(dt):
+    z = utc
     if dt.tzinfo is None:
-        dt = localzone().localize(dt)
+        return dt.replace(tzinfo=z)
+    elif dt.tzinfo != z:
+        return dt.astimezone(z)
+    else:
+        return dt
+
+def to_local(dt):
+    z = localzone()
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=z)
+    elif dt.tzinfo != z:
+        return dt.astimezone(z)
+    else:
+        return dt
+
+def with_tzinfo(dt, utc=False):
+    if dt.tzinfo is None:
+        if utc:
+            dt = dt.replace(tzinfo=utc)
+        else:
+            dt = localzone().localize(dt)
     return dt
 
-def to_str(dt):
+def to_str(dt, local=True):
     if not dt:
         return None
     elif isinstance(dt, six.string_types):
         return dt
-    dt = localize(dt)
+    if local:
+        dt = localize(dt)
     return dt.isoformat()
 
 def to_date_str(dt):
@@ -153,4 +176,72 @@ def to_datetime_range(s, include_stop=False, **delta):
     while x<stop or (include_stop and x==stop):
         yield x
         x += delta
+
+#NOTE: utcfromtimestamp
+utc = pytz.utc
+unix_time_epoch = datetime.utcfromtimestamp(0).replace(tzinfo=utc)
+ad_epoch = datetime(1,1,1, tzinfo=utc)
+
+#######################
+
+def microsecond_from_timedelta(td):
+    return td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6
+
+
+################# unix time
+
+def unix_time(t):
+    delta = to_utc(t) - unix_time_epoch
+    return delta.total_seconds()
+
+def _unix_time_microsecond(t):
+    #TODO
+    t = t.replace(tzinfo=None)
+    td = t - unix_time_epoch
+    return microsecond_from_timedelta(td)
+
+def to_timestamp(t):
+    return int(unix_time(t))
+    #return int(to_datetime(t).strftime('%s'))
+
+def from_timestamp(t):
+    return datetime.utcfromtimestamp(t)
+
+def timestamp_to_datetime_local(t):
+    return datetime.fromtimestamp(t)
+
+def to_millisecond(t):
+    return _unix_time_microsecond(t)/1000
+    #return int(round(mktime(t.timetuple())*1000))
+
+def to_microsecond(t):
+    if isinstance(t, six.integer_types):
+        return int(t)
+    if isinstance(t, six.string_types):
+        t = to_datetime(t)
+    return _unix_time_microsecond(t)
+    #return int(round(mktime(t.timetuple())*1000000)) + t.microsecond
+
+def from_microsecond(t):
+    return datetime.utcfromtimestamp(t/1000000).replace(microsecond=t%1000000)
+
+
+############## microsecond ad
+
+def microsecond_from_ad(t):
+    t = to_utc(t)
+    td = t - ad_epoch
+    return microsecond_from_timedelta(td)
+
+def to_microsecond_ad(t):
+    if isinstance(t, six.integer_types):
+        return int(t)
+    if isinstance(t, six.string_types):
+        t = to_datetime(t)
+    return microsecond_from_ad(t)
+
+def from_microsecond_ad(t):
+    t -= to_microsecond_ad(unix_time_epoch)
+    r = datetime.utcfromtimestamp(t/1000000).replace(microsecond=t%1000000, tzinfo=utc)
+    return to_local(r)
 
