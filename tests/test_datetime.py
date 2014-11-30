@@ -7,7 +7,6 @@ from kuankr_utils.date_time import *
 def test_simple():
     print datetime.now().isoformat()
     print utcnow().isoformat()
-    print now()
     print now().isoformat()
     print to_str(now())
 
@@ -25,4 +24,11 @@ def test_timezone():
     t = datetime(2011, 1, 4, 0, 0)
     assert json.dumps(t)=='"2011-01-04T00:00:00+08:00"'
 
+
+def test_overflow():
+    s = to_str(datetime.max)
+    assert s==None
+
+    s = to_str(datetime.min)
+    assert s==None
 

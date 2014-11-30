@@ -52,16 +52,6 @@ def now():
 def today():
     return to_datetime(date.today())
 
-def localize(dt, z=None):
-    #dt should be utc
-    if z is None:
-        z = localzone()
-    if dt.tzinfo is None:
-        dt = z.localize(dt)
-    elif dt.tzinfo != z:
-        dt = dt.astimezone(z)
-    return dt
-
 def to_utc(dt):
     z = utc
     if dt.tzinfo is None:
@@ -72,29 +62,40 @@ def to_utc(dt):
         return dt
 
 def to_local(dt):
+    if dt is None:
+        return None
     z = localzone()
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=z)
-    elif dt.tzinfo != z:
-        return dt.astimezone(z)
-    else:
-        return dt
+    try:
+        if dt.tzinfo is None:
+            #NOTE: tzinfo=null is not utc
+
+            #2014-11-29T16:00:46+08:06
+            #return dt.replace(tzinfo=utc)
+
+            #2014-11-29T16:00:46+08:00
+            return z.localize(dt)
+        elif dt.tzinfo != z:
+            return dt.astimezone(z)
+        else:
+            return dt
+    except OverflowError:
+        return None
 
 def with_tzinfo(dt, utc=False):
     if dt.tzinfo is None:
         if utc:
             dt = dt.replace(tzinfo=utc)
         else:
-            dt = localzone().localize(dt)
+            dt = to_local(dt)
     return dt
 
 def to_str(dt, local=True):
-    if not dt:
-        return None
-    elif isinstance(dt, six.string_types):
+    if isinstance(dt, six.string_types):
         return dt
     if local:
-        dt = localize(dt)
+        dt = to_local(dt)
+    if dt is None:
+        return None
     return dt.isoformat()
 
 def to_date_str(dt):
@@ -153,7 +154,7 @@ def to_interval(dt):
         return (dt, dt)
 
 def from_timestamp(t):
-    return localize(datetime.fromtimestamp(t))
+    return to_local(datetime.fromtimestamp(t))
 
 #datetime range
 def to_datetime_range(s, include_stop=False, **delta):

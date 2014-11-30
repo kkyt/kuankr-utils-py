@@ -37,6 +37,7 @@ setup(
     install_requires=[
         #basic
         "six",
+        "enum34",
         "simplejson",
 
         #datetime

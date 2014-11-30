@@ -18,7 +18,7 @@ class Serializer(object):
         return ''
 
     def dumps(self, x):
-        return x
+        return str(x)
 
     def loads(self, s):
         return s
@@ -55,7 +55,8 @@ class Serializer(object):
         f.write(self.dumps(x))
 
     def dump_sep(self, x, f):
-        f.write(self.dumps(x) + self.sep())
+        s = self.dumps(x)
+        f.write(s + self.sep())
 
     def load_stream(self, f, ignore_error=True):
         n = 0 

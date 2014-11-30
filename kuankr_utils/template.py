@@ -3,7 +3,7 @@ import yaml
 import jinja2
 import string
 
-from . import date_time
+from . import debug, date_time
 
 def render_jinja2(t, params=None):
     t = jinja2.Template(t)
@@ -21,5 +21,8 @@ def render_simple(t, params=None):
         return t
     if params is None:
         params = dict(os.environ)
+        x = date_time.now_str()
+        params['DATE'] = x[:date_time.DATE_LEN]
+        params['TIME'] = x[:date_time.DATETIME_LEN]
     t = string.Template(t)
     return t.safe_substitute(params)

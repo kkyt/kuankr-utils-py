@@ -26,11 +26,16 @@ def register_encoder(cls):
 
 @register_encoder(datetime.datetime)
 def encode_datetime(obj):
-    return with_tzinfo(obj).isoformat()
+    t = with_tzinfo(obj)
+    if t is None:
+        return None
+    return t.isoformat()
     
 @register_encoder(datetime.date)
 def encode_date(obj):
     obj = to_datetime(obj)
+    if obj is None:
+        return None
     return obj.isoformat()
 
 @register_encoder(types.GeneratorType)
