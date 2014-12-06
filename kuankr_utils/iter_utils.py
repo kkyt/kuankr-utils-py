@@ -29,7 +29,7 @@ def slice_iter(iterable, size):
     sourceiter = iter(iterable)
     while True:
         batchiter = itertools.islice(sourceiter, size)
-        yield chain([batchiter.next()], batchiter)
+        yield itertools.chain([batchiter.next()], batchiter)
 
 def ipeekn(iterable, n):
     it = iter(iterable)

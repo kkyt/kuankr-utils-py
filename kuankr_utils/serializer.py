@@ -94,6 +94,8 @@ class JsonSerializer(Serializer):
             encoder.FLOAT_REPR = float_repr
         if compact:
             self.separators = (',',':')
+        else:
+            self.separators = (', ',': ')
             
     def dumps(self, x):
         return json.dumps(x, separators=self.separators)
