@@ -76,6 +76,8 @@ class Serializer(object):
             n += 1
             try:
                 self.dump_sep(x, f)
+            except IOError:
+                raise
             except Exception as e:
                 if not ignore_error:
                     raise

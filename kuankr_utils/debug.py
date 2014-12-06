@@ -18,8 +18,19 @@ __all__ = [
 ]
 
 in_debug = False
+_enable_trace = True
 
+def enable_trace():
+    global _enable_trace
+    _enable_trace = True
+
+def disable_trace():
+    global _enable_trace
+    _enable_trace = False
+    
 def set_trace(level=0):
+    if not _enable_trace:
+        return
     global in_debug
     in_debug = True
     pdb.set_trace()
