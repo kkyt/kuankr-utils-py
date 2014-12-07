@@ -39,6 +39,7 @@ setup(
         "six",
         "enum34",
         "simplejson",
+        "namedlist",
 
         #datetime
         "pytz",
