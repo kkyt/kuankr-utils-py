@@ -9,7 +9,7 @@ from kuankr_utils import api_json
 from kuankr_utils import log, debug, dicts
 
 from .requests import response_hook, HTTPStreamAdapter
-from .http_debug import headers_line, stream_with_echo
+from .http_debug import headers_line, stream_with_echo, HTTP_CLIENT_DEBUG, HTTP_STREAM_DEBUG
 
 
 #NOTE: remove urllib3 log
@@ -43,17 +43,14 @@ class HttpClient(object):
             ses.mount('http://', HTTPStreamAdapter())
             #TODO https
 
-        self.debug = os.environ.get('HTTP_CLIENT_DEBUG_LOGGER')=='1'
-        self.stream_debug = os.environ.get('KUANKR_API_STREAM_DEBUG')=='1'
-
     def http(self, method, path, data=None, params=None, stream=False, **kwargs):
         #NOTE: stream is for response body, not for request body
-        if self.debug:
+        if HTTP_CLIENT_DEBUG:
             log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
             log.debug('%s' % headers_line(self.session.headers))
 
         if data is None:
-            if self.debug:
+            if HTTP_CLIENT_DEBUG:
                 log.debug('\nnull')
         else:
             data = api_json.dumps(data)
@@ -63,8 +60,8 @@ class HttpClient(object):
                 #requests send wrong chunk size for unicoode
                 data = (x.encode('utf8') if isinstance(x, unicode) else x for x in data)
 
-                if self.debug:
-                    if self.stream_debug:
+                if HTTP_CLIENT_DEBUG:
+                    if HTTP_STREAM_DEBUG:
                         data = stream_with_echo(data)
                     else:
                         log.debug('\n<stream>')
@@ -74,13 +71,13 @@ class HttpClient(object):
                 if isinstance(data, unicode):
                    data = data.encode('utf8')
 
-                if self.debug:
+                if HTTP_CLIENT_DEBUG:
                     log.debug('\n%s' % data)
 
         m = getattr(self.session, method)
         r = m(self.base+path, data=data, params=params, stream=stream, **kwargs)
 
-        if self.debug:
+        if HTTP_CLIENT_DEBUG:
             log.debug('%s' % headers_line(r.headers))
 
         if stream:
@@ -91,16 +88,16 @@ class HttpClient(object):
 
                 #work after response_hook
                 chunks = r.iter_chunks()
-                if self.debug and self.stream_debug:
+                if HTTP_STREAM_DEBUG:
                     chunks = stream_with_echo(chunks)
                 for x in chunks:
                     yield api_json.loads(x)
             r.raise_for_status()
-            if self.debug and not self.stream_debug:
+            if HTTP_CLIENT_DEBUG and not HTTP_STREAM_DEBUG:
                 log.debug('\n<stream>')
             return g()
         else:
-            if self.debug:
+            if HTTP_CLIENT_DEBUG:
                 s = r.content
                 log.debug('\n%s' % s)
             r.raise_for_status()

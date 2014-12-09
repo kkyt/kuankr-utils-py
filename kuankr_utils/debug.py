@@ -49,4 +49,3 @@ def pretty_traceback(showlocals=True, style='long', funcargs=True):
     excinfo = py.code.ExceptionInfo()
     info = excinfo.getrepr(funcargs=funcargs, showlocals=showlocals, style=style)
     return str(info)
-

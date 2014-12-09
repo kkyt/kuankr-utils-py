@@ -13,6 +13,7 @@ from aniso8601 import parse_date, parse_time, parse_datetime, parse_interval, pa
 
 DATE_LEN = len('2012-01-01')
 DATETIME_LEN = len('2012-01-01T00:00:00')
+TIME_LEN = len('00:00:00')
 
 """
 tzinfo是关于时区信息的类
@@ -37,7 +38,9 @@ def localzone():
     #NOTE: 在docker或VM里运行时,如果镜像没设好local zone,就会出错, 所以直接写死成 UTC8(Asia/Shanghai)
     if not os.environ.get('TZ'):
         #return UTC(8) #don't support localize
-        return pytz.timezone('Asia/Shanghai')
+        #TODO: http://hi.baidu.com/limodou/item/4a13b3107fca86f89d778af1
+        #return pytz.timezone('Asia/Shanghai')
+        return pytz.timezone('Asia/Taipei')
     else:
         return tzlocal.get_localzone() 
 
@@ -125,6 +128,9 @@ def to_datetime(dt):
 
         elif dt=='now':
             return now()
+
+        elif len(dt)==TIME_LEN:
+            return parse_time(dt)
 
         elif len(dt)<=DATE_LEN:
             return to_datetime(parse_date(dt))

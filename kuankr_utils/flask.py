@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import types
-import json
 from datetime import datetime
 from cStringIO import StringIO
 
@@ -10,15 +9,14 @@ from flask import Flask, Blueprint, Response
 from flask import request, abort, stream_with_context
 from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 
-from kuankr_utils import log, debug
-from kuankr_utils.logstash import log as logstash_log
+from kuankr_utils import log, debug, json, http_debug, logstash
 
 from kuankr_utils import api_json
 
 from flask.ext.api import status
 
 from .http import HTTP_400_BAD_REQUEST
-from .http_debug import response_line, request_line
+from .http_debug import response_line, request_line, HTTP_SERVER_DEBUG
 
 class JsonResponse(Response):
     default_mimetype = 'application/json'
@@ -120,7 +118,7 @@ class API(Flask, APIMixin):
         return x
 
     def preprocess_request(self):
-        if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
+        if HTTP_SERVER_DEBUG:
             try:
                 if request.headers.get('Transfer-Encoding') != 'chunked':
                     req = request.data
@@ -146,7 +144,7 @@ class API(Flask, APIMixin):
             rv = self.convert_response(rv)
         r = super(API, self).make_response(rv)
 
-        if os.environ.get('WSGI_DEBUG_LOGGER') != '0':
+        if HTTP_SERVER_DEBUG:
             try:
                 if not r.is_streamed:
                     resp = ''.join(r.response)
@@ -154,7 +152,7 @@ class API(Flask, APIMixin):
                     resp = '<stream>'
 
                 #rec = { 'request': req, 'response': resp }
-                #logstash_log.info('api_call', extra=rec)
+                #logstash.log.info('api_call', extra=rec)
                 log.info('API_RESPONSE\n' + response_line(r)+'\n'+resp)
             except:
                 pass
@@ -180,6 +178,21 @@ def setup_sentry(app):
 def request_json_body():
     return request.get_json(force=True, silent=True)
     #return api_json.loads(request.data)
+
+def response_stream(stream):
+    if http_debug.HTTP_STREAM_DEBUG:
+        stream = log.stream_with_echo(stream, prefix='<-- ')
+    return stream
+
+def request_stream(json=False):
+    stream = request.input_stream
+    #input = stream_with_context(input)
+    if http_debug.HTTP_STREAM_DEBUG:
+        stream = log.stream_with_echo(stream, prefix='--> ')
+    if json:
+        from kuankr_utils.json import loads
+        stream = (loads(x) for x in stream)
+    return stream
 
 def ensure_header(x):
     r = request.headers.get(x)

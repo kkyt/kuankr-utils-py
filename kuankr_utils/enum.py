@@ -1,6 +1,6 @@
 from ctypes import Structure, c_ubyte
 
-raise Exception("use enum34")
+#TODO: use enum32
 
 def Enum(*options):
     """

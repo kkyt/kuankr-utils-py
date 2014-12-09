@@ -1,5 +1,13 @@
+import os
 
 from . import log
+
+HTTP_SERVER_DEBUG = os.environ.get('HTTP_SERVER_DEBUG')=='1'
+
+HTTP_CLIENT_DEBUG = os.environ.get('HTTP_CLIENT_DEBUG')=='1'
+
+HTTP_STREAM_DEBUG = os.environ.get('HTTP_STREAM_DEBUG')=='1'
+
 
 def headers_line(headers):
     if not headers:

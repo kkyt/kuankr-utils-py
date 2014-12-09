@@ -32,3 +32,10 @@ def test_overflow():
     s = to_str(datetime.min)
     assert s==None
 
+def test_microsecond():
+    t = to_str(from_microsecond_ad(0))
+    assert t=='0001-01-01T08:00:00+08:00'
+
+    t = to_str(from_microsecond_ad(1))
+    assert t=='0001-01-01T08:00:00.000001+08:00'
+

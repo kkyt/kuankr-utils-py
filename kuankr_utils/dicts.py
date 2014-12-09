@@ -41,6 +41,35 @@ def recursive_merge_multi(base, *exts):
 recursive_extend = recursive_merge
 recursive_extend_multi = recursive_merge_multi
 
+#process dict/list
+def recursive_merge_with_list(base, ext):
+    if ext is None:
+        return base
+        
+    if base is None:
+        return ext
+        
+    if isinstance(base, dict):
+        if isinstance(ext, dict):
+            for k in ext:
+                base[k] = recursive_merge_with_list(base.get(k), ext[k])
+            return base
+        else:
+            return ext
+
+    elif isinstance(base, list):
+        if isinstance(ext, list):
+            while len(base) < len(ext):
+                base.append(None)
+            for i in range(len(ext)):
+                base[i] = recursive_merge_with_list(base[i], ext[i])
+            return base
+        else:
+            return ext
+        
+    else:
+        return ext
+
 def cleanup_dict(d, value=None):
     for k in d.keys():
         if d[k]==value:

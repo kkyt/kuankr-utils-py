@@ -28,6 +28,7 @@ __all__ = """
     info error warn debug debug2 debug3
     exception exception_
     info_ error_ warn_ debug_
+    stream_with_echo
 """.split()
 
 LOG_MSG_MAX_LEN = 2048
@@ -183,5 +184,16 @@ def exception(msg, *args, **kwargs):
 def _empty(*args, **kwargs): pass
 
 debug_ = info_ = warn_ = error_ = exception_ = _empty
+
+def stream_with_echo(stream, prefix='', every=None):
+    from . import log
+    if every is None:
+        every = 1
+    n = 0
+    for x in stream:
+        if n % every == 0:
+            debug('%s%s' % (prefix, x))
+        n += 1
+        yield x
 
 
