@@ -10,12 +10,18 @@ def not_found(environ, start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return ['Not Found']
 
-def create_app(api):
+def create_app(api, admin_app=None):
     version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
-    app = DispatcherMiddleware(not_found, {
+    d = {
         '/' + version: api
-    })
+    }
+    if admin_app is not None:
+        d['/admin'] = admin_app
+    app = DispatcherMiddleware(not_found, d)
     return app
+
+def namespaced_app(routes):
+    return DispatcherMiddleware(not_found, routes)
 
 def run_wsgi(name, app, default_port=80, server='gevent'):
     port = os.environ.get('%s_PORT' % name.upper(), default_port)

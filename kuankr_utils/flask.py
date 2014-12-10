@@ -25,6 +25,9 @@ class JsonStreamResponse(Response):
     default_mimetype = 'application/stream+json'
     #default_mimetype = 'text/plain'
 
+def jsonify(x):
+    return JsonResponse(json.dumps(x))
+
 class APIMixin(object):
     def get(self, rule, **options):
         options['methods'] = ['GET']
@@ -50,7 +53,10 @@ class APIMixin(object):
         options['methods'] = ['DELETE']
         return self.route(rule, **options)
 
-class APIBlueprint(Blueprint, APIMixin):
+class APPBlueprint(Blueprint, APIMixin):
+    pass
+
+class APIBlueprint(APPBlueprint):
     pass
 
 base_api = APIBlueprint('base_api', __name__)
@@ -77,32 +83,10 @@ def schema():
 def error():
     raise Exception(request.data)
 
-class API(Flask, APIMixin):
-    response_class = JsonResponse
-
+class APP(Flask, APIMixin):
     def __init__(self, *args, **kwargs):
-        super(API, self).__init__(*args, **kwargs)
-
-        for code in default_exceptions.iterkeys():
-            self.error_handler_spec[None][code] = self.make_json_error
-
+        super(APP, self).__init__(*args, **kwargs)
         self.sentry = setup_sentry(self)
-
-    def make_json_error(self, ex):
-        if isinstance(ex, HTTPException):
-            status_code = ex.code
-            id = ex.name
-            msg = ex.description
-        else:
-            status_code = 500
-            id = 'Internal Server Error'
-            msg = str(ex)
-        r = {
-            'id': id,
-            'status': status_code,
-            'error': msg,
-        }
-        return self.make_response((r, status_code))
 
     def convert_response(self, x):
         if x is None or isinstance(x, (dict,list)):
@@ -129,21 +113,52 @@ class API(Flask, APIMixin):
                 log.debug('API_REQUEST\n' + request_line(request)+'\n'+req)
             except:
                 pass
-        return super(API, self).preprocess_request()
+        return super(APP, self).preprocess_request()
 
     def make_response(self, rv):
-        if rv is None:
-            if request.method == 'GET':
-                return self.make_json_error(NotFound())
-                
         if isinstance(rv, tuple):
             rv = list(rv)
             rv[0] = self.convert_response(rv[0])
             rv = tuple(rv)
         else:
             rv = self.convert_response(rv)
-        r = super(API, self).make_response(rv)
+        r = super(APP, self).make_response(rv)
+        return r
 
+    def handle_exception(self, exc_info):
+        print debug.pretty_traceback()
+        return super(APP, self).handle_exception(exc_info)
+        
+class API(APP):
+    response_class = JsonResponse
+
+    def __init__(self, *args, **kwargs):
+        super(API, self).__init__(*args, **kwargs)
+
+        for code in default_exceptions.iterkeys():
+            self.error_handler_spec[None][code] = self.make_json_error
+
+    def make_json_error(self, ex):
+        if isinstance(ex, HTTPException):
+            status_code = ex.code
+            id = ex.name
+            msg = ex.description
+        else:
+            status_code = 500
+            id = 'Internal Server Error'
+            msg = str(ex)
+        r = {
+            'id': id,
+            'status': status_code,
+            'error': msg,
+        }
+        return self.make_response((r, status_code))
+
+    def make_response(self, rv):
+        if rv is None:
+            if request.method == 'GET':
+                return self.make_json_error(NotFound())
+        r = super(API, self).make_response(rv)
         if HTTP_SERVER_DEBUG:
             try:
                 if not r.is_streamed:
@@ -156,13 +171,8 @@ class API(Flask, APIMixin):
                 log.info('API_RESPONSE\n' + response_line(r)+'\n'+resp)
             except:
                 pass
-
         return r
-
-    def handle_exception(self, exc_info):
-        print debug.pretty_traceback()
-        return super(API, self).handle_exception(exc_info)
-        
+                
 
 def setup_sentry(app):
     from raven.contrib.flask import Sentry
