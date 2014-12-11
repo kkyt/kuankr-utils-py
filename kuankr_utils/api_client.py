@@ -8,6 +8,7 @@ from requests.exceptions import ConnectionError
 import heroics.client
 
 from . import log
+from . import serviced
 
 class ApiClient(object):
     def __init__(self, service, **options):
@@ -16,7 +17,11 @@ class ApiClient(object):
 
         env = os.environ
 
-        url = env['%s_URI' % service.upper()]
+        sd = serviced.get_serviced()
+        url = sd.lookup(service)
+        if not url:
+            raise Exception('unknown service: %s' % service)
+
         schema = env.get('%s_SCHEMA' % service.upper())
         if schema and os.path.exists(schema):
             f = open(schema)
