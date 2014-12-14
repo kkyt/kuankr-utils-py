@@ -99,7 +99,7 @@ class ColoredFormatter (Formatter):
         if self.reset and not message.endswith(escape_codes['reset']):
             message += escape_codes['reset']
 
-        if len(message)>LOG_MSG_MAX_LEN:
+        if record.levelno <= logging.INFO and len(message)>LOG_MSG_MAX_LEN:
             message = str_abbr(message, LOG_MSG_MAX_LEN)
         return message
 

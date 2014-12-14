@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from click import command, option, argument, group, echo, File, Path
 
 import yaml

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import sys
-import redis
 from collections import defaultdict
 
 from kuankr_utils import log, debug, network, json
@@ -87,6 +86,7 @@ class ServiceD(object):
 
 class RedisServiceD(ServiceD):
     def set_options(self, uri=None):
+        import redis
         if uri is None:
             uri = os.environ.get('KUANKR_SERVICED', 'redis://127.0.0.1:6379/1')
         log.info('RedisServiceD.init: %s' % uri)

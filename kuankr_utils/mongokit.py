@@ -302,6 +302,7 @@ class BaseService(object):
 
     #TODO: remove
     def info(self, id):
+        log.error('TODO: remove')
         return self.get(id)
 
     def find_all(self, where=None):
@@ -321,12 +322,35 @@ class BaseService(object):
 
     def remove(self, id):
         id = to_object_id(id)
-        x = self.find_by_id(id)
-        self.Model.remove({'_id': id})
-        return x
+        return self.Model.remove({'_id': id})
 
-    def remove_all(self, **options):
-        self.Model.remove(options)
+    def _get_where(self, **kwargs):
+        w = {}
+        for k,v in kwargs.items():
+            if v is not None:
+                w[k] = v
+        return w
+
+    def list(self, order=None, **conditions):
+        w = self._get_where(**conditions)
+        r = self.Model.find(w)
+        if order is not None:
+            r = r.sort(order)
+        return r
+
+    def remove_all_batch(self, **conditions):
+        w = self._get_where(**conditions)
+        return self.Model.remove(w)
+
+    def remove_all(self, **conditions):
+        w = self._get_where(**conditions)
+        r = self.Model.find(w)
+        n = 0
+        for x in r:
+            n += 1
+            #inherited may override remove
+            self.remove(x['_id'])
+        return n
         
 class ServiceWithName(BaseService):
     def remove(self, id_or_name):
@@ -344,17 +368,7 @@ class ServiceWithName(BaseService):
         return e
 
 class ServiceWithAppName(ServiceWithName):
-    def list(self, app=None):
-        w = {}
-        if app:
-            w['app'] = app
-        return self.Model.find(w)
-
-    def remove_all(self, app=None):
-        w = {}
-        if app:
-            w['app'] = app
-        self.Model.remove(w)
+    pass
             
 class ServiceWithApiClient(object):
     def __init__(self, Model, api_client=None):
