@@ -10,8 +10,7 @@ from io import BytesIO
 
 import msgpack
 
-from pyutils import datetime_utils
-from kuankr_utils import log, debug
+from kuankr_utils import log, debug, date_time
 
 try:
     import bson
@@ -31,7 +30,7 @@ def default(obj):
         return list(obj)
 
     elif isinstance(obj, datetime.datetime):
-        s = struct.pack('>q', datetime_utils.datetime_to_microsecond(obj))
+        s = struct.pack('>q', date_time.to_microsecond(obj))
         return msgpack.ExtType(EXT_DATETIME, s)
 
     elif bson is not None and isinstance(obj, bson.objectid.ObjectId):
@@ -43,7 +42,7 @@ def default(obj):
 def ext_hook(code, data):
     if code == EXT_DATETIME:
         t = struct.unpack('>q', data)[0]
-        return datetime_utils.microsecond_to_datetime(t)
+        return date_time.from_microsecond(t)
     else:
         log.warn('unknow msgpack ext code: %s' % code)
         return data

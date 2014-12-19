@@ -40,6 +40,9 @@ class Doc(Document):
     }
     required_fields = [ 'uuid', 'updated_at', 'created_at' ]
 
+    #for create cleanup
+    protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
+
     def after_create(self):
         return
 
@@ -60,6 +63,10 @@ class Doc(Document):
     def create(self, d):
         #NOTE: Model() doesn't work
         x = self()
+        d = dict(d)
+        for f in self.protected_fields:
+            if f in d:
+                del d[f]
         x.update(d)
         x.after_create()
         return x

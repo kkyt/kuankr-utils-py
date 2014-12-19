@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
-def reverse_update(d1, d2):
+def reverse_update(d1, d2, none_as_missing=False):
     for k,v in d2.iteritems():
-        if not k in d1:
+        if not k in d1 or none_as_missing and d1[k] is None:
             d1[k] = v
     return d1
 

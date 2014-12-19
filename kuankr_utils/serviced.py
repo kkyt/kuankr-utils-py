@@ -40,7 +40,7 @@ class ServiceD(object):
 
     def shutdown_and_exit(self):
         self.shutdown()
-        sys.exit(0)
+        sys.exit(2)
 
     def _register(self, service, uri):
         raise NotImplementedError()
@@ -85,21 +85,37 @@ class ServiceD(object):
         raise NotImplementedError()
 
 class RedisServiceD(ServiceD):
-    def set_options(self, uri=None):
+    #NOTE: set multi = False to ease debug
+    def set_options(self, uri=None, multi=None):
         import redis
+
         if uri is None:
             uri = os.environ.get('KUANKR_SERVICED', 'redis://127.0.0.1:6379/1')
-        log.info('RedisServiceD.init: %s' % uri)
+        if multi is None:
+            multi = os.environ.get('KUANKR_SERVICED_MULTI')=='1'
+        log.info('RedisServiceD.init: %s, multi: %s' % (uri, multi))
+
         self.r = redis.StrictRedis.from_url(uri)
+        self.multi = multi
+
         self.key = 'KrSD:'
 
     def _register(self, service, uri):
-        self.r.sadd(self.key + service, uri)
-        self.r.sadd(self.key, service)
+        k = self.key
+        if not self.multi:
+            self._delete(service)
+        self.r.sadd(k + service, uri)
+        self.r.sadd(k, service)
     
     def _unregister(self, service, uri):
-        self.r.srem(self.key + service, uri)
-        self.r.srem(self.key, service)
+        k = self.key
+        if not self.multi:
+            self._delete(service)
+        else:
+            self.r.srem(k + service, uri)
+
+        if self.r.scard(k + service)==0:
+            self.r.srem(k, service)
         
     def _delete(self, service=None):
         if service is None:
@@ -124,6 +140,7 @@ class RedisServiceD(ServiceD):
                 if r is not None:
                     return r
                 else:
+                    log.info('wait for service: %s, sleep %s' % (service, s))
                     gevent.sleep(s)
                     s *= 2
         else:
@@ -151,7 +168,10 @@ def get_serviced(**kwargs):
     if _sd is None:
         import atexit
         from gevent import signal
+        from gevent.monkey import patch_all
         from signal import SIGTERM, SIGINT
+
+        patch_all()
         _sd = RedisServiceD(**kwargs)
         _sd.setup()
         signal(SIGTERM, _sd.shutdown_and_exit)

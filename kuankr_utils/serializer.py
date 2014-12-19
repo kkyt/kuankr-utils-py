@@ -5,7 +5,7 @@ import six
 import pickle
 import functools
 
-from kuankr_utils import log, debug, json, msgpack
+from kuankr_utils import log, debug, json, msgpack, csv
 
 #unified interface to josn,msgpack,yaml etc
 
@@ -106,6 +106,24 @@ class JsonSerializer(Serializer):
     def sep(self):
         return '\n'
 
+class CsvSerializer(Serializer):
+    def __init__(self, headers=None, **kwargs):
+        self.headers = headers
+
+    def dumps(self, x):
+        return csv.dumps(x, self.options)
+
+    def loads(self, x):
+        return csv.dumps(x, self.options)
+
+    def dump_stream(self, stream, f, ignore_error=True):
+        if self.headers:
+            self.dump_sep(self.headers, f)
+        return super(CsvSerializer, self).dump_stream(stream, f, ignore_error)
+            
+    def sep(self):
+        return ''
+
 class MsgpackSerializer(Serializer):
     def __init__(self, encoding=None, unicode_errors=None):
         self.encoding = encoding
@@ -127,6 +145,7 @@ class MsgpackSerializer(Serializer):
 serializers = {
     None: Serializer,
     'json': JsonSerializer,
+    'csv': CsvSerializer,
     'msgpack': MsgpackSerializer
 }
 

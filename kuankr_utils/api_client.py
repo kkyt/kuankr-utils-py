@@ -18,7 +18,7 @@ class ApiClient(object):
         env = os.environ
 
         sd = serviced.get_serviced()
-        url = sd.lookup(service)
+        url = sd.lookup(service, wait=True)
         if not url:
             raise Exception('unknown service: %s' % service)
 
