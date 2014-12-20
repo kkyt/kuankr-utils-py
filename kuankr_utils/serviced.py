@@ -38,9 +38,10 @@ class ServiceD(object):
                 self.unregister(s, uri)
         self._shutdown = True
 
-    def shutdown_and_exit(self):
+    def shutdown_signal_handler(self, *args):
+        log.info('ServiceD.shutdown_signal_handler: %s' % str(args))
         self.shutdown()
-        sys.exit(2)
+        raise Exception("shutdown")
 
     def _register(self, service, uri):
         raise NotImplementedError()
@@ -151,31 +152,17 @@ class RedisServiceD(ServiceD):
                 return self.r.srandmember(k)
 
 
-'''
-import etcd
-class EtcdServiceD(ServiceD):
-    #TODO
-    def set_options(self, uri):
-        if uri is None:
-            uri = os.environ.get('KUANKR_SERVICED', 'etcd://127.0.0.1:4001')
-        self.etcd = etcd.Client(host=host, port=port)
-'''
-
 _sd = None
 
 def get_serviced(**kwargs):
     global _sd
     if _sd is None:
-        import atexit
-        from gevent import signal
-        from gevent.monkey import patch_all
-        from signal import SIGTERM, SIGINT
+        from signal import SIGTERM, SIGINT, SIGABRT, signal
 
-        patch_all()
         _sd = RedisServiceD(**kwargs)
         _sd.setup()
-        signal(SIGTERM, _sd.shutdown_and_exit)
-        signal(SIGINT, _sd.shutdown_and_exit)
+        for s in [SIGINT, SIGTERM, SIGABRT]:
+            signal(s, _sd.shutdown_signal_handler)
     return _sd
 
 def register_cli(cli):
@@ -205,4 +192,14 @@ def register_cli(cli):
     @pass_context
     def list_service(ctx):
         sd.delete()
+
+'''
+import etcd
+class EtcdServiceD(ServiceD):
+    #TODO
+    def set_options(self, uri):
+        if uri is None:
+            uri = os.environ.get('KUANKR_SERVICED', 'etcd://127.0.0.1:4001')
+        self.etcd = etcd.Client(host=host, port=port)
+'''
 
