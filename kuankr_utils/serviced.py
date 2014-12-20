@@ -12,6 +12,7 @@ class ServiceD(object):
         self.services = defaultdict(list)
         self.set_options(**options)
         self._shutdown = False
+        self._shutdown_handler_installed = False
 
     def normalize_uri(self, uri):
         local_ip = network.get_ip_address()
@@ -38,16 +39,27 @@ class ServiceD(object):
                 self.unregister(s, uri)
         self._shutdown = True
 
-    def shutdown_signal_handler(self, *args):
-        log.info('ServiceD.shutdown_signal_handler: %s' % str(args))
+    def shutdown_handler(self, *args):
+        log.info('ServiceD.shutdown_handler: %s' % str(args))
         self.shutdown()
         raise Exception("shutdown")
+
+    def install_shutdown_handler(self):
+        from signal import SIGTERM, SIGINT, SIGABRT, signal
+
+        for s in [SIGINT, SIGTERM, SIGABRT]:
+            signal(s, _sd.shutdown_handler)
 
     def _register(self, service, uri):
         raise NotImplementedError()
 
     def register(self, service, uri):
         log.info('ServiceD.register: %s %s' % (service, uri))
+
+        if not self._shutdown_handler_installed:
+            self._shutdown_handler_installed = True
+            self.install_shutdown_handler()
+
         uri = self.normalize_uri(uri)
         self.services[service].append(uri)
         return self._register(service, uri)
@@ -93,7 +105,7 @@ class RedisServiceD(ServiceD):
         if uri is None:
             uri = os.environ.get('KUANKR_SERVICED', 'redis://127.0.0.1:6379/1')
         if multi is None:
-            multi = os.environ.get('KUANKR_SERVICED_MULTI')=='1'
+            multi = os.environ.get('KUANKR_SERVICED_MULTI')!='0'
         log.info('RedisServiceD.init: %s, multi: %s' % (uri, multi))
 
         self.r = redis.StrictRedis.from_url(uri)
@@ -157,12 +169,9 @@ _sd = None
 def get_serviced(**kwargs):
     global _sd
     if _sd is None:
-        from signal import SIGTERM, SIGINT, SIGABRT, signal
-
         _sd = RedisServiceD(**kwargs)
         _sd.setup()
-        for s in [SIGINT, SIGTERM, SIGABRT]:
-            signal(s, _sd.shutdown_signal_handler)
+
     return _sd
 
 def register_cli(cli):
