@@ -11,12 +11,8 @@ def dumps(x, pretty=True):
         return x
     elif isinstance(x, types.GeneratorType):
         def g(x):
-            try:
-                for r in x:
-                    yield dumps(r, pretty=False)
-            except:
-                print debug.pretty_traceback()
-                raise
+            for r in x:
+                yield dumps(r, pretty=False)
         #non-pretty dump for stream
         #NOTE: don't add line end here
         #return (dumps(r, pretty=False) for r in x)
@@ -33,4 +29,8 @@ def loads(x):
     if isinstance(x, types.GeneratorType):
         return (json.loads(r) for r in x)
     else:
+        #specical case: empty string
+        if not x:
+            return None
         return json.loads(x)
+
