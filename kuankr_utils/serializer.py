@@ -1,11 +1,13 @@
-
 from __future__ import absolute_import
 
 import six
 import pickle
 import functools
+import types
 
-from kuankr_utils import log, debug, json, msgpack, csv
+from datetime import datetime
+
+from kuankr_utils import log, debug, json, msgpack, csv, api_json, date_time
 
 #unified interface to josn,msgpack,yaml etc
 
@@ -18,12 +20,21 @@ class Serializer(object):
         return ''
 
     def dumps(self, x):
-        return str(x)
+        if isinstance(x, types.GeneratorType):
+            return self.dumps_stream(x)
+        else:
+            if isinstance(x, unicode):
+                return x.encode('utf8')
+            else:
+                return str(x)
 
     def loads(self, s):
-        return s
+        if isinstance(s, types.GeneratorType):
+            return self.loads_stream(s)
+        else:
+            return s
 
-    def loads_stream(self, stream, ignore_error=True):
+    def loads_stream(self, stream, ignore_error=False):
         #for show in stack traceback
         n = 0 
         for x in stream:
@@ -36,7 +47,7 @@ class Serializer(object):
                 else:
                     log.error('%r\n%s' % (x, e))
 
-    def dumps_stream(self, stream, ignore_error=True):
+    def dumps_stream(self, stream, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -58,7 +69,7 @@ class Serializer(object):
         s = self.dumps(x)
         f.write(s + self.sep())
 
-    def load_stream(self, f, ignore_error=True):
+    def load_stream(self, f, ignore_error=False):
         n = 0 
         for line in f:
             n += 1
@@ -70,7 +81,7 @@ class Serializer(object):
                 else:
                     log.error('%r\n%s' % (line, e))
     
-    def dump_stream(self, stream, f, ignore_error=True):
+    def dump_stream(self, stream, f, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -106,17 +117,61 @@ class JsonSerializer(Serializer):
     def sep(self):
         return '\n'
 
-class CsvSerializer(Serializer):
-    def __init__(self, headers=None, **kwargs):
-        self.headers = headers
+class ApiJsonSerializer(Serializer):
+    def dumps(self, x, **kwargs):
+        return api_json.dumps(x, **kwargs)
+
+    def loads(self, x, **kwargs):
+        return api_json.loads(x, **kwargs)
+
+class TsvSerializer(Serializer):
+    def __init__(self, fields=None, **kwargs):
+        self.fields = fields
+
+    def sep(self):
+        return '\n'
 
     def dumps(self, x):
-        return csv.dumps(x, self.options)
+        if isinstance(x, dict):
+            x = [x.get(f) for f in self.fields]
+
+        for i,v in enumerate(x):
+            if isinstance(v, unicode):
+                v = v.encode('utf8')
+            elif isinstance(v, datetime):
+                v = date_time.to_str(v)
+            elif isinstance(v, (list,dict)):
+                v = json.dumps(v)
+            elif v is None:
+                v = ''
+
+            x[i] = str(v).replace('\t', ' ')
+                
+        return '\t'.join(x)
 
     def loads(self, x):
-        return csv.dumps(x, self.options)
+        return x.split('\t')
 
-    def dump_stream(self, stream, f, ignore_error=True):
+class CsvSerializer(Serializer):
+    def __init__(self, fields=None, headers=None, delimiter=None, **kwargs):
+        self.fields = fields
+        if headers == True:
+            headers = fields
+        self.headers = headers
+        self.delimiter = delimiter or ','
+        self.options = {
+            'fields': self.fields,
+            'delimiter': self.delimiter
+        }
+
+
+    def dumps(self, x):
+        return csv.dumps(x, **self.options)
+
+    def loads(self, x):
+        return csv.dumps(x, **self.options)
+
+    def dump_stream(self, stream, f, ignore_error=False):
         if self.headers:
             self.dump_sep(self.headers, f)
         return super(CsvSerializer, self).dump_stream(stream, f, ignore_error)
@@ -130,12 +185,18 @@ class MsgpackSerializer(Serializer):
         self.unicode_errors = unicode_errors
 
     def dumps(self, x):
-        return msgpack.dumps(x)
+        if isinstance(x, types.GeneratorType):
+            return self.dumps_stream(x)
+        else:
+            return msgpack.dumps(x)
 
     def loads(self, s):
-        return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
+        if isinstance(s, types.GeneratorType):
+            return self.loads_stream(s)
+        else:
+            return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
-    def load_stream(self, f, ignore_error=True):
+    def load_stream(self, f, ignore_error=False):
         return msgpack.load_stream(f, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
     def dump_stream(self, stream, f, sep=None):
@@ -144,8 +205,11 @@ class MsgpackSerializer(Serializer):
 
 serializers = {
     None: Serializer,
+    'raw': Serializer,
     'json': JsonSerializer,
+    'api_json': ApiJsonSerializer,
     'csv': CsvSerializer,
+    'tsv': TsvSerializer,
     'msgpack': MsgpackSerializer
 }
 

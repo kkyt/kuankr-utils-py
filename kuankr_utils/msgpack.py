@@ -48,6 +48,9 @@ def ext_hook(code, data):
         return data
 
 def loads(s, encoding=None, unicode_errors=None):
+    #special case: empty string
+    if not s:
+        return None
     if unicode_errors is None:
         unicode_errors = 'strict'
     return msgpack.unpackb(s, ext_hook=ext_hook, encoding=encoding, unicode_errors=unicode_errors)
