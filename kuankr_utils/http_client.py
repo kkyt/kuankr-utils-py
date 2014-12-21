@@ -5,11 +5,11 @@ import os
 import types
 import requests
 
-from kuankr_utils import api_json
 from kuankr_utils import log, debug, dicts
 
 from .requests import response_hook, HTTPStreamAdapter
 from .http_debug import headers_line, stream_with_echo, HTTP_CLIENT_DEBUG, HTTP_STREAM_DEBUG
+from .serializer import get_serializer
 
 
 #NOTE: remove urllib3 log
@@ -27,11 +27,32 @@ class Resource(object):
         pass
 
 class HttpClient(object):
-    def __init__(self, base, headers=None, options=None, async_send=False):
+    def get_serializer(self, content_type):
+        s = self.serializer_cache.get(content_type)
+        if s is None:
+            d = {
+                'application/json': 'api_json',
+                'application/msgpack': 'msgpack',
+                'application/octet-stream': 'raw'
+            }
+            t = d.get(content_type)
+            if t is None:
+                raise Exception('unkown content type: %s' % content_type)
+            else:
+                s = self.serializer_cache[content_type] = get_serializer(t)
+        return s
+
+    def __init__(self, base, headers=None, options=None, async_send=False, content_type=None):
         self.base = base
         self.options = options or {}
 
-        h = {'content-type': 'application/json'}
+        if content_type is None:
+            content_type = 'application/json'
+        self.content_type = content_type
+        self.serializer_cache = {}
+        self.serializer = self.get_serializer(content_type)
+        
+        h = {'content-type': content_type}
         dicts.reverse_update(headers, h)
 
         self.session = ses = requests.Session()
@@ -43,17 +64,35 @@ class HttpClient(object):
             ses.mount('http://', HTTPStreamAdapter())
             #TODO https
 
-    def http(self, method, path, data=None, params=None, stream=False, **kwargs):
+    def http(self, method, path, data=None, params=None, stream=False, content_type=None, **kwargs):
+        headers = {}
+
+        if content_type is not None:
+            serializer = self.get_serializer(content_type)
+            headers['content-type'] = content_type
+        else:
+            serializer = self.serializer
+            content_type = self.content_type
+
         #NOTE: stream is for response body, not for request body
         if HTTP_CLIENT_DEBUG:
+            if content_type=='application/json':
+                debug_repr = str
+            else:
+                debug_repr = repr
+
             log.info('%s %s %s' % (method.upper(), self.base+path, headers_line(params)))
-            log.debug('%s' % headers_line(self.session.headers))
+            h = self.session.headers
+            if headers:
+                h = dict(h)
+                h.update(headers)
+            log.debug('%s' % headers_line(h))
 
         if data is None:
             if HTTP_CLIENT_DEBUG:
                 log.debug('\nnull')
         else:
-            data = api_json.dumps(data)
+            data = serializer.dumps(data)
 
             if isinstance(data, types.GeneratorType):
                 #TODO
@@ -72,10 +111,10 @@ class HttpClient(object):
                    data = data.encode('utf8')
 
                 if HTTP_CLIENT_DEBUG:
-                    log.debug('\n%s' % data)
+                    log.debug('\n%s' % debug_repr(data))
 
         m = getattr(self.session, method)
-        r = m(self.base+path, data=data, params=params, stream=stream, **kwargs)
+        r = m(self.base+path, data=data, params=params, stream=stream, headers=headers, **kwargs)
 
         if HTTP_CLIENT_DEBUG:
             log.debug('%s' % headers_line(r.headers))
@@ -91,17 +130,17 @@ class HttpClient(object):
                 if HTTP_STREAM_DEBUG:
                     chunks = stream_with_echo(chunks)
                 for x in chunks:
-                    yield api_json.loads(x)
+                    yield serializer.loads(x)
             r.raise_for_status()
             if HTTP_CLIENT_DEBUG and not HTTP_STREAM_DEBUG:
                 log.debug('\n<stream>')
             return g()
         else:
+            s = r.content
             if HTTP_CLIENT_DEBUG:
-                s = r.content
-                log.debug('\n%s' % s)
+                log.debug('\n%s' % debug_repr(s))
             r.raise_for_status()
-            return r.json()
+            return serializer.loads(s)
 
     def set_headers(self, headers):
         if headers:
