@@ -4,16 +4,23 @@ import yaml
 
 from . import template
 
-def load_string(text, params=None):
-    s = template.render_jinja2(text, params)
-    return yaml.load(s)
+def load_string(text, params=None, use_template=True):
+    if use_template:
+        text = template.render_jinja2(text, params)
+    return yaml.load(text)
     
-def load_file(filename, params=None):
+def save_file(filename, config):
+    f = open(filename, 'w')
+    yaml.dump(config, f)
+    f.close()
+    return
+
+def load_file(filename, params=None, use_template=True):
     if not os.path.exists(filename):
         return None
     f = open(filename, 'r')
     s = f.read()
-    c = load_string(s, params)
+    c = load_string(s, params, use_template=use_template)
     f.close()
     return c
     
