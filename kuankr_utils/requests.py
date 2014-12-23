@@ -52,7 +52,10 @@ def iter_chunks(response, amt=None):
         # Non-chunked response. If amt is None, then just drop back to
         # response.read()
         if amt is None:
-            yield response.read()
+            r = response.read()
+            #NOTE: don't yield empty chunk
+            if r:
+                yield r
         else:
             # Yield chunks as read from the HTTP connection
             while True:
