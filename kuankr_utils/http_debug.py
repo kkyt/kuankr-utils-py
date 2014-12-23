@@ -23,7 +23,12 @@ def response_line(resp):
     return headers_line(resp.headers)
 
 
-def stream_with_echo(stream):
+def stream_with_echo(stream, fmt=None):
     for x in stream:
-        log.debug('%s' % x)
+        if fmt is not None:
+            s = fmt(x)
+        else:
+            s = x
+        log.debug('%s' % s)
         yield x
+

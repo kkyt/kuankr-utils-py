@@ -97,7 +97,10 @@ def loads(x):
     if isinstance(x, types.GeneratorType):
         return (loads(r) for r in x)
     else:
-        return json.loads(x)
+        if not x:
+            return None
+        else:
+            return json.loads(x)
 
 def loads_stream(stream):
     for s in stream:

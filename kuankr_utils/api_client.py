@@ -11,15 +11,17 @@ from . import log
 from . import serviced
 
 class ApiClient(object):
-    def __init__(self, service, **options):
+    def __init__(self, service, uri=None, **options):
         self.service = service
         self.options = options
 
         env = os.environ
 
-        sd = serviced.get_serviced()
-        url = sd.lookup(service, wait=True)
-        if not url:
+        if uri is None:
+            sd = serviced.get_serviced()
+            uri = sd.lookup(service, wait=True)
+
+        if not uri:
             raise Exception('unknown service: %s' % service)
 
         schema = env.get('%s_SCHEMA' % service.upper())
@@ -28,7 +30,7 @@ class ApiClient(object):
             s = f.read()
             f.close()
         else:
-            u = url + '/_schema'
+            u = uri + '/_schema'
             log.debug('GET ' + u)
 
             #wait until api is available
@@ -39,7 +41,7 @@ class ApiClient(object):
                     break
                 except ConnectionError as e:
                     import gevent
-                    log.info('wait %s secs for api service: %s %s' % (s, service, url))
+                    log.info('wait %s secs for api service: %s %s' % (s, service, uri))
                     gevent.sleep(s)
                     s *= 2
 
@@ -63,7 +65,7 @@ class ApiClient(object):
         options['default_headers'] = headers
 
         self.schema = schema
-        self.api = heroics.client.Client(schema, url, options)
+        self.api = heroics.client.Client(schema, uri, options)
         self.http = self.api._http_client
 
     def set_headers(self, headers):

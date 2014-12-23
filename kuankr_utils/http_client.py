@@ -101,7 +101,7 @@ class HttpClient(object):
 
                 if HTTP_CLIENT_DEBUG:
                     if HTTP_STREAM_DEBUG:
-                        data = stream_with_echo(data)
+                        data = stream_with_echo(data, fmt=debug_repr)
                     else:
                         log.debug('\n<stream>')
             else:
@@ -128,7 +128,7 @@ class HttpClient(object):
                 #work after response_hook
                 chunks = r.iter_chunks()
                 if HTTP_STREAM_DEBUG:
-                    chunks = stream_with_echo(chunks)
+                    chunks = stream_with_echo(chunks, debug_repr)
                 for x in chunks:
                     yield serializer.loads(x)
             r.raise_for_status()
