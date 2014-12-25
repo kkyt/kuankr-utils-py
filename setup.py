@@ -74,6 +74,7 @@ setup(
 
         #yaml
         "PyYAML"
+        "ujson"
     ],
 
     dependency_links=[

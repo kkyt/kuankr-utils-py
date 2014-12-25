@@ -202,11 +202,30 @@ class MsgpackSerializer(Serializer):
     def dump_stream(self, stream, f, sep=None):
         return msgpack.streaming_dump(stream, f)
 
+class UJsonSerializer(Serializer):
+    def dumps(self, x, **kwargs):
+        import ujson
+        return ujson.dumps(x)
+
+    def loads(self, s, **kwargs):
+        import ujson
+        return ujson.loads(s)
+
+class SimpleJsonSerializer(Serializer):
+    def dumps(self, x, **kwargs):
+        import simplejson
+        return simplejson.dumps(x)
+
+    def loads(self, s, **kwargs):
+        import simplejson
+        return simplejson.loads(s)
 
 serializers = {
     None: Serializer,
     'raw': Serializer,
     'json': JsonSerializer,
+    'ujson': UJsonSerializer,
+    'simple_json': SimpleJsonSerializer,
     'api_json': ApiJsonSerializer,
     'csv': CsvSerializer,
     'tsv': TsvSerializer,

@@ -43,6 +43,8 @@ def run_wsgi(name, app, default_port=80, server='gevent'):
 
     if server=='gevent':
         from gevent.pywsgi import WSGIServer
+        from gevent.monkey import patch_all
+        patch_all()
         http_server = WSGIServer(('', port), app)
         http_server.serve_forever()
     else:
