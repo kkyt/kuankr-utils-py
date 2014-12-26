@@ -2,8 +2,25 @@ import itertools
 import functools
 import heapq
 import operator
+import random
 import collections
 
+def sample(stream, r):
+    if r is not None:
+        if isinstance(r, int):
+            n = 0
+            for x in stream:
+                n += 1
+                if n % r == 0:
+                    yield x
+        else:
+            for x in stream:
+                if random.random() <= r:
+                    yield x
+    else:
+        for x in stream:
+            yield x
+    
 def concat(*args):
     for a in args:
         for s in a:
