@@ -49,3 +49,18 @@ def pretty_traceback(showlocals=True, style='long', funcargs=True):
     excinfo = py.code.ExceptionInfo()
     info = excinfo.getrepr(funcargs=funcargs, showlocals=showlocals, style=style)
     return str(info)
+
+def set_trace_handler():
+    import signal, gevent
+    import pudb
+
+    from gevent import monkey
+    monkey.patch_all()
+
+    def _interrupt_handler():
+        pudb._get_debugger().set_trace()
+
+    gevent.signal(signal.SIGUSR1, _interrupt_handler)
+
+
+

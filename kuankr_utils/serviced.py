@@ -45,10 +45,12 @@ class ServiceD(object):
         raise Exception("shutdown")
 
     def install_shutdown_handler(self):
+        import gevent
         from signal import SIGTERM, SIGINT, SIGABRT, signal
 
-        for s in [SIGINT, SIGTERM, SIGABRT]:
-            signal(s, _sd.shutdown_handler)
+        if _sd is not None:
+            for s in [SIGINT, SIGTERM, SIGABRT]:
+                gevent.signal(s, _sd.shutdown_handler)
 
     def _register(self, service, uri):
         raise NotImplementedError()
@@ -196,6 +198,13 @@ def register_cli(cli):
     @pass_context
     def list_service(ctx, name):
         sd.delete(name)
+
+    @cli.command('register')
+    @argument('name')
+    @argument('uri')
+    @pass_context
+    def list_service(ctx, name, uri):
+        sd.register(name, uri)
 
     @cli.command('clear')
     @pass_context

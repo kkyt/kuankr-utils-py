@@ -30,6 +30,14 @@ def create_app(api, admin_app=None, name=None):
             sd = serviced.get_serviced()
             sd.register(name, uri)
 
+    profile = os.environ.get('HTTP_SERVER_PROFILE')=='1'
+    if profile:
+        from werkzeug.contrib.profiler import ProfilerMiddleware
+        app = ProfilerMiddleware(app)
+
+    trace = os.environ.get('HTTP_SERVER_TRACE')=='1'
+    if trace:
+        debug.set_trace_handler()
     return app
 
 def namespaced_app(routes):
