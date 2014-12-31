@@ -73,7 +73,7 @@ setup(
         "gunicorn",
 
         #yaml
-        "PyYAML"
+        "PyYAML",
         "ujson"
     ],
 
