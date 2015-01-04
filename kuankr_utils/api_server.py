@@ -32,8 +32,14 @@ def create_app(api, admin_app=None, name=None):
 
     profile = os.environ.get('HTTP_SERVER_PROFILE')=='1'
     if profile:
-        from werkzeug.contrib.profiler import ProfilerMiddleware
-        app = ProfilerMiddleware(app)
+        #from werkzeug.contrib.profiler import ProfilerMiddleware
+        #app = ProfilerMiddleware(app)
+        
+        from dozer import Dozer, Profiler
+        #TODO: set profile path in flask app
+        #app = Profiler(app)
+        app = Dozer(app)
+
 
     trace = os.environ.get('HTTP_SERVER_TRACE')=='1'
     if trace:

@@ -70,6 +70,7 @@ setup(
 
         #debug
         "faulthandler",
+        "Dozer",
 
         #gevent
         "gevent>=1.0",
