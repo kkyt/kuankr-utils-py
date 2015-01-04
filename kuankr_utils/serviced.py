@@ -110,7 +110,9 @@ class RedisServiceD(ServiceD):
             multi = os.environ.get('KUANKR_SERVICED_MULTI')!='0'
         log.info('RedisServiceD.init: %s, multi: %s' % (uri, multi))
 
-        self.r = redis.StrictRedis.from_url(uri)
+        uri_list = uri.split(',')
+        self.rs = [redis.StrictRedis.from_url(u) for u in uri_list]
+        self.r = self.rs[0]
         self.multi = multi
 
         self.key = 'KrSD:'
@@ -146,24 +148,30 @@ class RedisServiceD(ServiceD):
             r[s] = self.lookup(s, wait=False, all=True)
         return r
 
+    def _lookup_redis(self, r, service, all):
+        k = self.key + service
+        if all:
+            return list(r.smembers(k))
+        else:
+            return r.srandmember(k)
+
     def _lookup(self, service, wait=True, all=False):
         if wait:
             import gevent
             s = 0.1
             while True:
-                r = self._lookup(service, wait=False, all=all)
-                if r is not None:
-                    return r
+                x = self._lookup(service, wait=False, all=all)
+                if x:
+                    return x
                 else:
                     log.info('wait for service: %s, sleep %s' % (service, s))
                     gevent.sleep(s)
                     s *= 2
         else:
-            k = self.key + service
-            if all:
-                return list(self.r.smembers(k))
-            else:
-                return self.r.srandmember(k)
+            for r in self.rs:
+                x = self._lookup_redis(r, service, all)
+                if x:
+                    return x
 
 
 _sd = None
