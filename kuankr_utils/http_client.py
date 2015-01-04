@@ -49,20 +49,35 @@ class HttpClient(object):
         if content_type is None:
             content_type = 'application/json'
         self.content_type = content_type
+
+        self.async_send = async_send
+
         self.serializer_cache = {}
         self.serializer = self.get_serializer(content_type)
-        
+
         h = {'content-type': content_type}
         dicts.reverse_update(headers, h)
+        self.headers = headers
+        
+        from gevent.local import local
+        self.local = local()
 
-        self.session = ses = requests.Session()
-        self.set_headers(headers)
-        ses.hooks.update(response=response_hook)
-        if async_send:
-            #NOTE: must patch_all, otherwise it will hangs
-            from gevent import monkey; monkey.patch_all()
-            ses.mount('http://', HTTPStreamAdapter())
-            #TODO https
+    @property
+    def session(self):
+        #NOTE: don not share session between greenlets
+        if not hasattr(self.local, 'session'):
+            ses = requests.Session()
+            ses.hooks.update(response=response_hook)
+            if self.async_send:
+                #NOTE: must patch_all, otherwise it will hangs
+                from gevent import monkey; monkey.patch_all()
+                ses.mount('http://', HTTPStreamAdapter())
+                #TODO https
+
+            self.local.session = ses
+            self.set_headers(self.headers)
+
+        return self.local.session
 
     def http(self, method, path, data=None, params=None, stream=False, content_type=None, **kwargs):
         headers = {}
