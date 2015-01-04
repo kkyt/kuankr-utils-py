@@ -78,6 +78,9 @@ def schema():
         f.close()
     return schema
 
+@base_api.get('/_inspect')
+def inspect():
+    return {}
 
 @base_api.get('/_test/error')
 def error():

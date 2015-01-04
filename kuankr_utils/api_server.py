@@ -37,7 +37,9 @@ def create_app(api, admin_app=None, name=None):
 
     trace = os.environ.get('HTTP_SERVER_TRACE')=='1'
     if trace:
-        debug.set_trace_handler()
+        debug.setup_trace_handler()
+        debug.setup_backdoor()
+
     return app
 
 def namespaced_app(routes):

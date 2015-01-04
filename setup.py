@@ -68,6 +68,9 @@ setup(
         "python-logstash",
         "raven",
 
+        #debug
+        "faulthandler",
+
         #gevent
         "gevent>=1.0",
         "gunicorn",
