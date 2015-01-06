@@ -61,6 +61,17 @@ class APIBlueprint(APPBlueprint):
 
 base_api = APIBlueprint('base_api', __name__)
 
+@base_api.get('/_home')
+def home():
+    return Response('''
+        <html>
+        <a href="_ping">ping</a>
+        <a href="_schema">schema</a>
+        <a href="_inspect">inspect</a>
+        <a href="/_dozer/index">memory</a>
+        </html>
+        ''')
+
 @base_api.get('/_ping')
 def ping():
     return { 

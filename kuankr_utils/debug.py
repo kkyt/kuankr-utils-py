@@ -12,8 +12,11 @@ except:
 __all__ = [
     'set_trace', 'set_trace_',
     'in_debug',
-    'pretty_traceback',
     'simple_traceback',
+    'pretty_traceback',
+    'with_pretty_traceback',
+    'setup_trace_handler',
+    'setup_backdoor',
     'set_trace'
 ]
 
@@ -49,6 +52,13 @@ def pretty_traceback(showlocals=True, style='long', funcargs=True):
     excinfo = py.code.ExceptionInfo()
     info = excinfo.getrepr(funcargs=funcargs, showlocals=showlocals, style=style)
     return str(info)
+
+def with_pretty_traceback(f, *args, **kwargs):
+    try:
+        f(*args, **kwargs)
+    except:
+        print pretty_traceback()
+        raise
 
 def setup_trace_handler():
     import signal, gevent, faulthandler
