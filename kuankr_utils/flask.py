@@ -153,14 +153,19 @@ class API(APP):
             self.error_handler_spec[None][code] = self.make_json_error
 
     def make_json_error(self, ex):
-        if isinstance(ex, HTTPException):
+        #HTTPException
+        if hasattr(ex, 'code'):
             status_code = ex.code
-            id = ex.name
-            msg = ex.description
         else:
             status_code = 500
-            id = 'Internal Server Error'
-            msg = str(ex)
+
+        id = ex.__class__.__name__
+
+        if hasattr(ex, 'description'):
+            msg = '%s: %s' % (id, ex.description)
+        else:
+            msg = '%s: %s' % (id, ex)
+
         r = {
             'id': id,
             'status': status_code,
