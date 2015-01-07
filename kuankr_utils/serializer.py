@@ -7,7 +7,7 @@ import types
 
 from datetime import datetime
 
-from kuankr_utils import log, debug, json, msgpack, csv, api_json, date_time
+from kuankr_utils import log, debug, json, csv, api_json, date_time
 
 #unified interface to josn,msgpack,yaml etc
 
@@ -185,21 +185,25 @@ class MsgpackSerializer(Serializer):
         self.unicode_errors = unicode_errors
 
     def dumps(self, x):
+        from kuankr_utils import msgpack
         if isinstance(x, types.GeneratorType):
             return self.dumps_stream(x)
         else:
             return msgpack.dumps(x)
 
     def loads(self, s):
+        from kuankr_utils import msgpack
         if isinstance(s, types.GeneratorType):
             return self.loads_stream(s)
         else:
             return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
     def load_stream(self, f, ignore_error=False):
+        from kuankr_utils import msgpack
         return msgpack.load_stream(f, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
     def dump_stream(self, stream, f, sep=None):
+        from kuankr_utils import msgpack
         return msgpack.streaming_dump(stream, f)
 
 class UJsonSerializer(Serializer):
