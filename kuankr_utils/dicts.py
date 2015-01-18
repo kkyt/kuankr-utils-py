@@ -76,3 +76,9 @@ def cleanup_dict(d, value=None):
             del d[k]
     return d
 
+def default_get_multi(key, default, *args):
+    for d in args:
+        if d and key in d:
+            return d[key]
+    return default
+

@@ -160,6 +160,8 @@ class API(APP):
             status_code = 500
 
         id = ex.__class__.__name__
+
+        #NOTE: donnot change msg, it's for end-user message
         #for werkzeug.HTTPException
         if hasattr(ex, 'description'):
             msg = ex.description
