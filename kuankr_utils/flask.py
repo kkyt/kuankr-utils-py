@@ -160,7 +160,11 @@ class API(APP):
             status_code = 500
 
         id = ex.__class__.__name__
-        msg = str(ex)
+        #for werkzeug.HTTPException
+        if hasattr(ex, 'description'):
+            msg = ex.description
+        else:
+            msg = str(ex)
         r = {
             'id': id,
             'status': status_code,
