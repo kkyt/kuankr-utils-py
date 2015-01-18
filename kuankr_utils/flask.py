@@ -160,12 +160,7 @@ class API(APP):
             status_code = 500
 
         id = ex.__class__.__name__
-
-        if hasattr(ex, 'description'):
-            msg = '%s: %s' % (id, ex.description)
-        else:
-            msg = '%s: %s' % (id, ex)
-
+        msg = str(ex)
         r = {
             'id': id,
             'status': status_code,
