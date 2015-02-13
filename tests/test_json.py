@@ -20,3 +20,8 @@ def test_decimal():
     j = simplejson
     print json.dumps([22/10.0])
 
+def test_uuid():
+    import uuid
+    x = uuid.uuid4()
+    assert dumps(x)=='"%s"' % x.hex
+

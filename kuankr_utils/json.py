@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import simplejson as json
 import types
+import uuid
 
 import datetime
 import functools
@@ -42,6 +43,10 @@ def encode_date(obj):
 def encode_generator(obj):
     return list(obj)
 
+@register_encoder(uuid.UUID)
+def encode_uuid(obj):
+    return obj.hex
+
 #NOTE: simplejson already handles Decimal
 @register_encoder(decimal.Decimal)
 def encode_generator(obj):
@@ -64,7 +69,7 @@ class Encoder(json.JSONEncoder):
             return e(obj)
 
         if hasattr(obj, '__str__'):
-            #ObjectId, UUID
+            #ObjectId
             return str(obj)
 
         return super(Encoder, self).default(obj)
