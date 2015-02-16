@@ -18,8 +18,13 @@ def register_models(db, *models):
         model.generate_index(db[model.__collection__])
 
 def to_object_id(id):
+    if id is None:
+        return id
     if not isinstance(id, bson.ObjectId):
-        id = bson.ObjectId(id)
+        try:
+            id = bson.ObjectId(id)
+        except:
+            id = None
     return id
         
 class Doc(Document):
@@ -88,6 +93,8 @@ class Doc(Document):
 
     def find_by_id(self, id, where=None):
         id = to_object_id(id)
+        if id is None:
+            return None
         w = {'_id': id}
         if where:
             w.update(where)

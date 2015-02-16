@@ -10,8 +10,9 @@ def not_found(environ, start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return ['Not Found']
 
-def create_app(api, admin_app=None, name=None):
-    version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
+def create_app(api, admin_app=None, name=None, version=None):
+    if version is None:
+        version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
     d = {
         '/' + version: api
     }
