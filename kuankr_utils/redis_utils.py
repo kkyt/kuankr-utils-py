@@ -1,5 +1,7 @@
 import sys
 
+from kuankr_utils import json
+
 class NamespacedRedis(object):
     def __init__(self, prefix, redis, debug=False):
         self.prefix = prefix
@@ -26,6 +28,8 @@ class Collection(object):
             return None
         elif t==bool:
             return int
+        elif t==dict or t==list:
+            return json.dumps
         else:
             return str
 
@@ -34,6 +38,8 @@ class Collection(object):
             return None
         elif t==bool:
             return lambda x: x=='1'
+        elif t==dict or t==list:
+            return json.loads
         else:
             return t
 
@@ -83,7 +89,7 @@ class Hash(Collection):
         if t==float:
             self.redis.hincrbyfloat(self.key+k, f, change)
         elif t==int:
-            self.redis.hincr(self.key+k, f, change)
+            self.redis.hincrby(self.key+k, f, change)
         else:
             raise Exception('field %s must be int or float' % f)
         
@@ -133,4 +139,29 @@ class Hash(Collection):
 
     def remove(self, k):
         self.redis.delete(self.key+k)
+
+class List(Collection):
+    def __init__(self, redis=None, key=None, type=None):
+        super(List, self).__init__(redis, key)
+        self.type = type
+        self.encoder = self.encoder_for_type(self.type)
+        self.decoder = self.decoder_for_type(self.type)
+
+    def push(self, k, v):
+        if self.encoder is not None:
+            v = self.encoder(v)
+        self.redis.lpush(self.key+k, v)
+
+    def pop(self, k):
+        v = self.redis.pop(self.key+k)
+        if v is not None and self.decoder is not None:
+            v = self.decoder(v)
+        return v
+
+    def index(self, k, i):
+        v = self.redis.lindex(self.key+k, i)
+        if v is not None and self.decoder is not None:
+            v = self.decoder(v)
+        return v
+
 
