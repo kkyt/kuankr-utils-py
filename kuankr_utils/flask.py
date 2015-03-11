@@ -190,10 +190,13 @@ class API(APP):
         r = super(API, self).make_response(rv)
         if HTTP_SERVER_DEBUG:
             try:
-                if not r.is_streamed:
-                    resp = ''.join(r.response)
-                else:
+                if r.is_streamed:
                     resp = '<stream>'
+                else:
+                    resp = ''.join(r.response)
+                    ct = r.headers.get('Content-Type')
+                    if ct and ct.startswith('text/html'):
+                         resp = str_utils.str_abbr(resp)
 
                 #rec = { 'request': req, 'response': resp }
                 #logstash.log.info('api_call', extra=rec)
