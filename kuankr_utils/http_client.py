@@ -79,8 +79,9 @@ class HttpClient(object):
 
         return self.local.session
 
-    def http(self, method, path, data=None, params=None, stream=False, content_type=None, **kwargs):
-        headers = {}
+    def http(self, method, path, data=None, params=None, stream=False, content_type=None, headers=None, **kwargs):
+        if headers is None:
+            headers = {}
 
         if content_type is not None:
             serializer = self.get_serializer(content_type)

@@ -24,7 +24,7 @@ def try_to_unicode(s, encoding='utf8'):
         return s
 
 def recursive_substitute(obj, params, f=None):
-    if is isinstance(obj, six.string_types):
+    if isinstance(obj, six.string_types):
         if f is None:
             return obj % params
         else:

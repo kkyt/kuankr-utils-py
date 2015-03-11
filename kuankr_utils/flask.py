@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import re
 import types
 from datetime import datetime
 from cStringIO import StringIO
@@ -11,11 +12,12 @@ from werkzeug.exceptions import default_exceptions, HTTPException, NotFound
 
 from kuankr_utils import log, debug, json, http_debug, logstash
 
-from kuankr_utils import api_json
+from kuankr_utils import api_json, str_utils
 
 from flask.ext.api import status
 
-from .http import HTTP_400_BAD_REQUEST
+from .http import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
+
 from .http_debug import response_line, request_line, HTTP_SERVER_DEBUG
 
 class JsonResponse(Response):
@@ -159,14 +161,21 @@ class API(APP):
         else:
             status_code = 500
 
-        id = ex.__class__.__name__
-
         #NOTE: donnot change msg, it's for end-user message
         #for werkzeug.HTTPException
         if hasattr(ex, 'description'):
             msg = ex.description
         else:
             msg = str(ex)
+
+        #usage: raise Exception("error_id: error message")
+        a = msg.split(': ', 1)
+        if len(a)>1 and re.match("^\w+$", a[0]):
+            id = a[0]
+            msg = a[1]
+        else:
+            id = ex.__class__.__name__
+
         r = {
             'id': id,
             'status': status_code,
@@ -230,8 +239,33 @@ def ensure_header(x):
         abort(HTTP_400_BAD_REQUEST, '%s header is missing' % x)
     return r
 
+kuankr_allowed_api_clients = os.environ.get('KUANKR_ALLOWED_API_CLIENTS', '').split(',')
+
+def halt_error(status, id, error=None):
+    if error is None:
+        error = id
+    abort(status, '%s: %s' % (id,error))
+
+def bad_request(id, error=None):
+    halt_error(HTTP_400_BAD_REQUEST, id, error)
+
+def unauthorized(id, error=None):
+    halt_error(HTTP_401_UNAUTHORIZED, id, error)
+
+def forbidden(id, error=None):
+    halt_error(HTTP_403_FORBIDDEN, id, error)
+
+def not_found(id, error=None):
+    halt_error(HTTP_404_NOT_FOUND, id, error)
+
+def internal_server_error(id, error=None):
+    halt_error(HTTP_500_INTERNAL_SERVER_ERROR, id, error)
+
 def get_api_client():
-    return ensure_header('X-Api-Client')
+    h = ensure_header('X-Api-Client')
+    if kuankr_allowed_api_clients and not h in kuankr_allowed_api_clients:
+        bad_request('api_client_invalid')
+    return h
 
 def get_api_token():
     return ensure_header('X-Api-Token')

@@ -10,6 +10,12 @@ import heroics.client
 from . import log
 from . import serviced
 
+def normalize_header_key(s):
+    return s.lower().replace('_', '-')
+
+def normalize_headers(h):
+    return { normalize_header_key(k): v for k,v in h.items()}
+
 class ApiClient(object):
     def __init__(self, service, uri=None, **options):
         self.service = service
@@ -56,12 +62,12 @@ class ApiClient(object):
         for x in ['api_client', 'auth_token', 'admin_token']:
             v = env.get('KUANKR_%s' % x.upper())
             if v:
-                h = ('x_%s' % x).replace('_', '-')
-                headers[h] = v
+                headers['x_%s' % x] = v
 
+        headers = normalize_headers(headers)
         dh = options.get('default_headers')
         if dh:
-            headers.update(dh)
+            headers.update(normalize_headers(dh))
         options['default_headers'] = headers
 
         self.schema = schema
