@@ -35,11 +35,8 @@ class HttpClient(object):
                 'application/msgpack': 'msgpack',
                 'application/octet-stream': 'raw'
             }
-            t = d.get(content_type)
-            if t is None:
-                raise Exception('unkown content type: %s' % content_type)
-            else:
-                s = self.serializer_cache[content_type] = get_serializer(t)
+            t = d.get(content_type, 'raw')
+            s = self.serializer_cache[content_type] = get_serializer(t)
         return s
 
     def __init__(self, base, headers=None, options=None, async_send=False, content_type=None):
