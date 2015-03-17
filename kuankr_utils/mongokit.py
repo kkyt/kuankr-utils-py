@@ -27,26 +27,34 @@ def to_object_id(id):
             id = None
     return id
         
-class Doc(Document):
+class HasUUID(Document):
+    structure = {
+        'uuid': uuid.UUID,
+    }
+    default_values = {
+        'uuid': uuid.uuid4,
+    }
+    required_fields = [ 'uuid' ]
+
+class HasTimestamp(Document):
+    structure = {
+        'updated_at': datetime,
+        'created_at': datetime,
+    }
+    default_values = {
+        'created_at': date_time.now,
+        'updated_at': date_time.now
+    }
+    required_fields = [ 'updated_at', 'created_at' ]
+
+class DocBase(Document):
     '''
     NOTE: 
         x = Doc(d) didn't create default_values
         should use: x = Doc(); x.update(d);
     '''
-    structure = {
-        'updated_at': datetime,
-        'created_at': datetime,
-        'uuid': uuid.UUID,
-    }
-    default_values = {
-        'uuid': uuid.uuid4,
-        'created_at': date_time.now,
-        'updated_at': date_time.now
-    }
-    required_fields = [ 'uuid', 'updated_at', 'created_at' ]
 
-    #for create cleanup
-    protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
+    protected_fields = ['id', '_id']
 
     def after_create(self):
         return
@@ -103,7 +111,7 @@ class Doc(Document):
 
     def save(self):
         self.before_save()
-        return super(Doc, self).save()
+        return super(DocBase, self).save()
 
     def put_by_id(self, id, doc):
         id = to_object_id(id)
@@ -132,6 +140,15 @@ class Doc(Document):
             del d['_id']
         return d
         
+class DocWithoutUUID(DocBase, HasTimestamp):
+    #for create cleanup
+    protected_fields = ['updated_at', 'created_at', 'id', '_id']
+
+class DocWithUUID(DocBase, HasTimestamp, HasUUID):
+    protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
+
+Doc = DocWithoutUUID
+
 class HasName(Document):
     structure = {
         'name': basestring,
