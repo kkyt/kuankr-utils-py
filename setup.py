@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='kuankr-utils',
-    version='0.0.1',
+    version='0.1.2',
 
     author='dev',
     author_email='dev@agutong.com',
@@ -45,6 +45,7 @@ setup(
         "pytz",
         "tzlocal",
         "aniso8601",
+        "python-dateutil",
 
         #test
         "pytest",
@@ -78,7 +79,10 @@ setup(
 
         #yaml
         "PyYAML",
-        "ujson"
+        "ujson",
+
+        #string
+        "inflection",
     ],
 
     dependency_links=[
