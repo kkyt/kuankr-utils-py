@@ -65,6 +65,31 @@ class Doc(Document):
     def remove(self, query):
         self.collection.remove(query)
 
+    def remove_by_id(self, id):
+        return self.remove({'_id': to_object_id(id)})
+
+    def get_field(self, id, field, default=None):
+        r = self.collection.find(
+            {'_id': to_object_id(id)}, 
+            {'$set': {field: value}}
+        )
+        if r is None:
+            return None
+        else:
+            return r.get(field, default)
+
+    def set_field(self, id, field, value):
+        self.collection.update(
+            {'_id': to_object_id(id)}, 
+            {'$set': {field: value}}
+        )
+
+    def inc_field(self, id, field, change):
+        self.collection.update(
+            {'_id': to_object_id(id)}, 
+            {'$inc': {field: change}}
+        )
+    
     def create(self, d):
         #NOTE: Model() doesn't work
         x = self()
