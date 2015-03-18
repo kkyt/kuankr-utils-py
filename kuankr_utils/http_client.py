@@ -59,21 +59,23 @@ class HttpClient(object):
         from gevent.local import local
         self.local = local()
 
+    def make_session(self):
+        ses = requests.Session()
+        ses.hooks.update(response=response_hook)
+        if self.async_send:
+            #NOTE: must patch_all, otherwise it will hangs
+            from gevent import monkey; monkey.patch_all()
+            ses.mount('http://', HTTPStreamAdapter())
+            #TODO https
+
+        ses.headers.update(self.headers)
+        return ses
+
     @property
     def session(self):
         #NOTE: don not share session between greenlets
         if not hasattr(self.local, 'session'):
-            ses = requests.Session()
-            ses.hooks.update(response=response_hook)
-            if self.async_send:
-                #NOTE: must patch_all, otherwise it will hangs
-                from gevent import monkey; monkey.patch_all()
-                ses.mount('http://', HTTPStreamAdapter())
-                #TODO https
-
-            self.local.session = ses
-            self.set_headers(self.headers)
-
+            self.local.session = self.make_session()
         return self.local.session
 
     def http(self, method, path, data=None, params=None, stream=False, content_type=None, headers=None, **kwargs):
