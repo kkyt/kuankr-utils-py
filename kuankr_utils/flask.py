@@ -82,6 +82,15 @@ def ping():
         'time': datetime.now()
     }
 
+@base_api.get('/_echo')
+def echo():
+    return { 
+        'path': request.path,
+        'headers': request.headers,
+        'body': request.data,
+        'time': datetime.now()
+    }
+
 @base_api.get('/_schema')
 def schema():
     schema = os.environ.get("KUANKR_SCHEMA")
