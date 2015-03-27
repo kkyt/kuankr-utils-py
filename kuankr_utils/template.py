@@ -16,7 +16,7 @@ def render_jinja2(t, params=None):
     return t.render(**ps)
 
 
-def render_simple(t, params=None):
+def render_simple(t, params=None, safe=True):
     if not t:
         return t
     if params is None:
@@ -25,4 +25,8 @@ def render_simple(t, params=None):
         params['DATE'] = x[:date_time.DATE_LEN]
         params['TIME'] = x[:date_time.DATETIME_LEN]
     t = string.Template(t)
-    return t.safe_substitute(params)
+    if safe:
+        return t.safe_substitute(params)
+    else:
+        return t.substitute(params)
+
