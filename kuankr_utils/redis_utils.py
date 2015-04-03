@@ -127,7 +127,7 @@ class Hash(Collection):
                 del x[f]
                 self.redis.hdel(self.key+k, f)
 
-        for f,t in self.decoders.items():
+        for f,t in self.encoders.items():
             if not f in x:
                 continue
             z = x[f]
