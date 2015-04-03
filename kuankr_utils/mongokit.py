@@ -56,6 +56,9 @@ class DocBase(Document):
 
     protected_fields = ['id', '_id']
 
+    #will be the default in future mongokit release
+    use_schemaless = True
+
     def after_create(self):
         return
 
