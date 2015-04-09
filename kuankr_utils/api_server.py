@@ -42,6 +42,7 @@ def create_app(api, admin_app=None, name=None, version=None):
         from dozer import Dozer, Profiler
         #TODO: set profile path in flask app
         #app = Profiler(app)
+        #localhost/_profiler
         app = Dozer(app)
 
 

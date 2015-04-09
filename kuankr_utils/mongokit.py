@@ -10,7 +10,10 @@ from datetime import datetime
 from kuankr_utils import log, debug, date_time
 from kuankr_utils.mongodb import OBJECTID_PATTERN
 
-from mongokit import Connection, Document
+from mongokit import Connection, Document, OR
+
+numeric = OR(float, int, long)
+string_or_dict = OR(basestring, unicode, dict)
 
 def register_models(db, *models):
     for model in models:
@@ -80,10 +83,7 @@ class DocBase(Document):
         return self.remove({'_id': to_object_id(id)})
 
     def get_field(self, id, field, default=None):
-        r = self.collection.find(
-            {'_id': to_object_id(id)}, 
-            {'$set': {field: value}}
-        )
+        r = self.collection.find_one({'_id': to_object_id(id)})
         if r is None:
             return None
         else:
@@ -104,7 +104,10 @@ class DocBase(Document):
     def create(self, d):
         #NOTE: Model() doesn't work
         x = self()
-        d = dict(d)
+        if d is None:
+            d = {}
+        else:
+            d = dict(d)
         for f in self.protected_fields:
             if f in d:
                 del d[f]
@@ -231,19 +234,23 @@ class HasApp(Document):
 
     def validate(self, *args, **kwargs):
         super(HasApp, self).validate(*args, **kwargs)
+        name = self['name']
+
+        a = name.split('.')
+        if len(a)<3:
+            raise Exception('component name must be of user.app.component format, got %s' % name)
 
         #NOTE: not working: `if not 'app' in self`
-        if not self.get('app'):
-            a = self['name'].split('.')
-            self['app'] = '.'.join(a[:2])
+        app = self.get('app')
+        if not app:
+            app = self['app'] = '.'.join(a[:2])
 
-        a = self['name'].split('.')
-        assert len(a)>=3
+        b = app.split('.')
+        if len(b)!=2:
+            raise Exception('app name must be of user.app format, got %s' % app)
 
-        b = self['app'].split('.')
-        assert len(b)==2
-
-        assert a[0]==b[0] and a[1]==b[1]
+        if a[0]!=b[0] or a[1]!=b[1]:
+            raise Exception('app name donot match component name: %s %s' % (app, name))
 
 class HasTitleDesc(Document):
     structure = {
