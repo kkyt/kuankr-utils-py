@@ -50,7 +50,16 @@ def run_api(method, args, file=None, data=None, doc=False, stream=False):
 
             body = {}
             if data:
-                body = yaml.load(data)
+                try:
+                    body = yaml.load(data)
+                    if not isinstance(body, dict):
+                        raise Exception('invalid data')
+                except:
+                    body = {}
+                    for s in data.split(','):
+                        k,v = s.split('=')
+                        body[k.strip()] = yaml.load(v)
+                    
             elif file:
                 f = open(file, 'r')
                 body = yaml.load(f.read())
