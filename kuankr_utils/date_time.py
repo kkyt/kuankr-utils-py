@@ -137,11 +137,11 @@ def to_datetime(dt):
         else:
             return with_tzinfo(parse_datetime(dt))
 
-    elif isinstance(dt, date):
-        return with_tzinfo(datetime(dt.year, dt.month, dt.day))
-
     elif isinstance(dt, datetime):
         return with_tzinfo(dt)
+
+    elif isinstance(dt, date):
+        return with_tzinfo(datetime(dt.year, dt.month, dt.day))
 
     else:
         return None
