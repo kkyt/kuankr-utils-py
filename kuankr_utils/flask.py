@@ -251,7 +251,10 @@ def ensure_header(x):
         abort(HTTP_400_BAD_REQUEST, '%s header is missing' % x)
     return r
 
-kuankr_allowed_api_clients = os.environ.get('KUANKR_ALLOWED_API_CLIENTS', '').split(',')
+kuankr_allowed_api_clients = []
+_s = os.environ.get('KUANKR_ALLOWED_API_CLIENTS')
+if _s:
+    kuankr_allowed_api_clients = _s.split(',')
 
 def halt_error(status, id, error=None):
     if error is None:
