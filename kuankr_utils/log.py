@@ -116,7 +116,7 @@ else:
         'DEBUG':    'green',
         'INFO':     'cyan',
         'WARNING':  'yellow',
-        'ERROR':    'red',
+        'ERROR':    'bold_red',
         'CRITICAL': 'red',
     }
 

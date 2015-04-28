@@ -27,13 +27,14 @@ def test_timezone():
 
 def test_overflow():
     s = to_str(datetime.max)
-    assert s==None
+    assert s is not None
 
     s = to_str(datetime.min)
-    assert s==None
+    assert s is not None
 
 def test_microsecond():
-    t = to_str(from_microsecond_ad(0))
+    d = from_microsecond_ad(0)
+    t = to_str(d)
     assert t=='0001-01-01T08:00:00+08:00'
 
     t = to_str(from_microsecond_ad(1))
