@@ -89,7 +89,7 @@ class Serializer(object):
                 else:
                     log.error('%r\n%s' % (line, e))
     
-    def dump_stream(self, stream, f, ignore_error=False):
+    def dump_stream_to_file(self, stream, f, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -179,10 +179,10 @@ class CsvSerializer(Serializer):
     def loads(self, x):
         return csv.dumps(x, **self.options)
 
-    def dump_stream(self, stream, f, ignore_error=False):
+    def dump_stream_to_file(self, stream, f, ignore_error=False):
         if self.headers:
             self.dump_sep(self.headers, f)
-        return super(CsvSerializer, self).dump_stream(stream, f, ignore_error)
+        return super(CsvSerializer, self).dump_stream_to_file(stream, f, ignore_error)
             
     def sep(self):
         return ''
@@ -210,7 +210,7 @@ class MsgpackSerializer(Serializer):
         from kuankr_utils import msgpack
         return msgpack.load_stream(f, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
-    def dump_stream(self, stream, f, sep=None):
+    def dump_stream_to_file(self, stream, f, sep=None):
         from kuankr_utils import msgpack
         return msgpack.streaming_dump(stream, f)
 

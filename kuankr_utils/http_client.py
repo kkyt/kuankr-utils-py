@@ -153,10 +153,10 @@ class HttpClient(object):
             r.raise_for_status()
             if HTTP_CLIENT_DEBUG and not HTTP_STREAM_DEBUG:
                 log.debug('\n<stream>')
-            r = g()
+            s = g()
             if HTTP_STREAM_DEBUG:
-                r = stream_with_echo(r, debug_repr)
-            return r
+                s = stream_with_echo(s, debug_repr)
+            return s
         else:
             s = r.content
             if HTTP_CLIENT_DEBUG:
