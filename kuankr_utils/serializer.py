@@ -21,7 +21,7 @@ class Serializer(object):
 
     def dumps(self, x):
         if isinstance(x, types.GeneratorType):
-            return self.dumps_stream(x)
+            return self.dump_stream(x)
         else:
             if isinstance(x, unicode):
                 return x.encode('utf8')
@@ -30,11 +30,19 @@ class Serializer(object):
 
     def loads(self, s):
         if isinstance(s, types.GeneratorType):
-            return self.loads_stream(s)
+            return self.load_stream(s)
         else:
             return s
 
+    #TODO: delete
     def loads_stream(self, stream, ignore_error=False):
+        log.error('use load_stream')
+        return self.load_stream(stream, ignore_error)
+    def dumps_stream(self, stream, ignore_error=False):
+        log.error('use dump_stream')
+        return self.dump_stream(stream, ignore_error)
+
+    def load_stream(self, stream, ignore_error=False):
         #for show in stack traceback
         n = 0 
         for x in stream:
@@ -47,7 +55,7 @@ class Serializer(object):
                 else:
                     log.error('%r\n%s' % (x, e))
 
-    def dumps_stream(self, stream, ignore_error=False):
+    def dump_stream(self, stream, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -187,14 +195,14 @@ class MsgpackSerializer(Serializer):
     def dumps(self, x):
         from kuankr_utils import msgpack
         if isinstance(x, types.GeneratorType):
-            return self.dumps_stream(x)
+            return self.dump_stream(x)
         else:
             return msgpack.dumps(x)
 
     def loads(self, s):
         from kuankr_utils import msgpack
         if isinstance(s, types.GeneratorType):
-            return self.loads_stream(s)
+            return self.load_stream(s)
         else:
             return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
 

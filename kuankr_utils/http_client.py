@@ -135,6 +135,7 @@ class HttpClient(object):
             log.debug('%s' % headers_line(r.headers))
 
         if stream:
+            '''
             def g():
                 #NOTE:
                 #work before response_hook
@@ -142,14 +143,20 @@ class HttpClient(object):
 
                 #work after response_hook
                 chunks = r.iter_chunks()
-                if HTTP_STREAM_DEBUG:
-                    chunks = stream_with_echo(chunks, debug_repr)
                 for x in chunks:
                     yield serializer.loads(x)
+            '''
+            def g():
+                for x in serializer.load_stream(r.raw):
+                    yield x
+
             r.raise_for_status()
             if HTTP_CLIENT_DEBUG and not HTTP_STREAM_DEBUG:
                 log.debug('\n<stream>')
-            return g()
+            r = g()
+            if HTTP_STREAM_DEBUG:
+                r = stream_with_echo(r, debug_repr)
+            return r
         else:
             s = r.content
             if HTTP_CLIENT_DEBUG:

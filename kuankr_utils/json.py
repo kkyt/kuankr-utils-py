@@ -107,12 +107,21 @@ def loads(x):
         else:
             return json.loads(x)
 
-def loads_stream(stream):
+def load_stream(stream):
     for s in stream:
         yield loads(s)
 
-def dumps_stream(stream):
+def dump_stream(stream):
     for x in stream:
         yield dumps(x)
 
     
+def loads_stream(stream):
+    log.error('use load_stream')
+    return load_stream(stream)
+
+
+def dumps_stream(stream):
+    log.error('use dump_stream')
+    return dump_stream(stream)
+
