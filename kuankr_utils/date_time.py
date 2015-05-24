@@ -24,9 +24,12 @@ from pytz.tzinfo import StaticTzInfo
 class UTC(StaticTzInfo):
     """UTC"""
     def __init__(self,offset=0):
+        self._offset = offset
         self._utcoffset = timedelta(hours=offset)
         self.zone = 'UTC%s' % offset
 
+    def __reduce__(self):
+        return UTC, (self._offset,)
 
 def localzone():
     #TODO
