@@ -83,6 +83,9 @@ setup(
 
         #string
         "inflection",
+
+        #network
+        "netifaces"
     ],
 
     dependency_links=[

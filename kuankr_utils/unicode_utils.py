@@ -29,7 +29,7 @@ def str_to_unicode(s, encoding=None):
             #since many sites declares GB2312, but use GB18030 instead
             encoding = [encoding, 'GB18030']
 
-    if not instance(encoding, list):
+    if not isinstance(encoding, list):
         encoding = [encoding]
     last_err = None
     for e in encoding:
