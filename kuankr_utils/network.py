@@ -1,8 +1,7 @@
 
 import random
-import socket
-import fcntl
 import struct
+import netifaces
 
 from . import log
  
@@ -24,21 +23,18 @@ def get_host_and_port(addr):
 
 def get_ip_address(ifname=None):
     if ifname is None:
-        ifname = ['eth0', 'wlan0', 'em0']
+        ifname = ['eth0', 'wlan0', 'en0']
+        ifname += netifaces.interfaces()
 
     if isinstance(ifname, basestring):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        return socket.inet_ntoa(fcntl.ioctl(
-            s.fileno(),
-            0x8915,  # SIOCGIFADDR
-            struct.pack('256s', ifname[:15])
-        )[20:24])
+        s = netifaces.ifaddresses(ifname)
+        return s[netifaces.AF_INET][0]['addr']
     else:
         for s in ifname:
             try:
                 ip = get_ip_address(s)
                 return ip
-            except IOError, e:
+            except:
                 pass
         return None
 
