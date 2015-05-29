@@ -5,6 +5,7 @@ import six
 import uuid
 import copy
 import bson
+import yaml
 from datetime import datetime
 
 from kuankr_utils import log, debug, date_time
@@ -235,10 +236,11 @@ class HasApp(Document):
     def validate(self, *args, **kwargs):
         super(HasApp, self).validate(*args, **kwargs)
         name = self['name']
-
-        a = name.split('.')
+        a = []
+        if name:
+            a = name.split('.')
         if len(a)<3:
-            raise Exception('component name must be of user.app.component format, got %s' % name)
+            raise Exception('component name of %s must be of user.app.component format, got %s' % (self.__class__.__name__, name))
 
         #NOTE: not working: `if not 'app' in self`
         app = self.get('app')
@@ -270,6 +272,27 @@ class HasTemplate(Document):
     required_fields = [
     ]
 
+class HasConfig(Document):
+    structure = {
+        'config': basestring,
+    }
+    def get_config(self):
+        c = self['config']
+        if c:
+            try:
+                c = yaml.load(c)
+            except:
+                return None
+        else:
+            c = {}
+        return c
+
+    def validate(self, *args, **kwargs):
+        super(HasConfig, self).validate(*args, **kwargs)
+        c = self.get_config()
+        if c is None:
+            raise Exception('invalid yaml config: %s' % self['config'])
+
 class HasCodeObject(Document):
     '''
         object: {
@@ -278,7 +301,7 @@ class HasCodeObject(Document):
             'name': basestring,
             'arguments': list,
             'options': dict,
-            'source_code': basestring,
+            'code': basestring,
         }
     '''
     structure = {
