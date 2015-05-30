@@ -146,7 +146,7 @@ class Average(Accumulator):
 class CompositeAccumulator(Accumulator):
     def __init__(self, **options):
         self.set_options(**options)
-        self.comps = self.create_accumulators()
+        self.comps = self.create_comps()
 
     def create_comps(self):
         return {}
