@@ -58,5 +58,7 @@ def load_attribute(module_and_name, raise_exception=True):
 
 import sys
 def preserve_module(mod):
+    if sys.modules.get(mod.__name__) is not None:
+        raise Exception('name of user-defined code segments conflict')
     sys.modules[mod.__name__] = mod
 
