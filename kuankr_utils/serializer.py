@@ -42,19 +42,6 @@ class Serializer(object):
         log.error('use dump_stream')
         return self.dump_stream(stream, ignore_error)
 
-    def load_stream(self, stream, ignore_error=False):
-        #for show in stack traceback
-        n = 0 
-        for x in stream:
-            n += 1
-            try:
-                yield self.loads(x)
-            except Exception as e:
-                if not ignore_error:
-                    raise
-                else:
-                    log.error('%r\n%s' % (x, e))
-
     def dump_stream(self, stream, ignore_error=False):
         n = 0 
         for x in stream:
@@ -78,8 +65,12 @@ class Serializer(object):
         f.write(s + self.sep())
 
     def load_stream(self, f, ignore_error=False):
+        #for show in stack traceback
         n = 0 
         for line in f:
+            #skip empty line by default
+            if line=='\n' or line=='\r\n' or line=='':
+                continue
             n += 1
             try:
                 yield self.loads(line)
