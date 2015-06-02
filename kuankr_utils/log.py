@@ -31,7 +31,7 @@ __all__ = """
     stream_with_echo
 """.split()
 
-LOG_MSG_MAX_LEN = 2048
+LOG_MSG_MAX_LEN = int(os.environ.get('KUANKR_LOG_MAXLEN', 2048))
 
 # The default colors to use for the debug levels
 default_log_colors =  {
@@ -99,7 +99,7 @@ class ColoredFormatter (Formatter):
         if self.reset and not message.endswith(escape_codes['reset']):
             message += escape_codes['reset']
 
-        if record.levelno <= logging.INFO and len(message)>LOG_MSG_MAX_LEN:
+        if record.levelno <= logging.INFO and LOG_MSG_MAX_LEN>0 and len(message)>LOG_MSG_MAX_LEN:
             message = str_abbr(message, LOG_MSG_MAX_LEN)
         return message
 

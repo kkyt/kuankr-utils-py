@@ -1,25 +1,9 @@
+import copy
 from collections import deque
 
-class Accumulator(object):
-    def __init__(self, **options):
-        self.set_options(**options)
+from .stateful import Stateful
 
-    def set_options(self):
-        pass
-
-    def set_state(self, state):
-        if state is None:
-            state = {}
-        if not state:
-            state.update(self.init_state())
-        self.state = state
-
-    def init_state(self):
-        return {}
-
-    def get_state(self):
-        return self.state
-
+class Accumulator(Stateful):
     @property
     def value(self, **kwargs):
         return None
@@ -107,6 +91,40 @@ class Sum(Accumulator):
     def value(self):
         return self.state['s']
 
+class MultiAccumulator(Accumulator):
+    def set_options(self, base=None):
+        self.acc = base
+        self.accs = {}
+
+    def init_state(self):
+        return { 'accs': {} }
+
+    def get_state(self):
+        for k,a in self.accs.items():
+            a.get_state()
+
+    def set_state(self, state):
+        super(MultiAccumulator, self).set_state(state)
+        for k,s in self.state['accs'].items():
+            a = self.accs[k] = copy.deepcopy(self.acc)
+            a.set_state(s)
+
+    def feed(self, value):
+        k, r = value
+        state = self.state
+        a = self.accs.get(k)
+        if a is None:
+            s = state['accs'].get(k)
+            if s is None:
+                s = state['accs'][k] = {}
+            a = self.accs[k] = copy.deepcopy(self.acc)
+            a.set_state(s)
+        a.feed(r)
+
+    @property
+    def value(self):
+        return {k: a.value for k,a in self.accs.items()}
+
 class Average(Accumulator):
     def init_state(self):
         return { 'a': 0, 'n': 0}
@@ -142,28 +160,4 @@ class Average(Accumulator):
     @property
     def value(self):
         return self.state['a']
-
-class CompositeAccumulator(Accumulator):
-    def __init__(self, **options):
-        self.set_options(**options)
-        self.comps = self.create_comps()
-
-    def create_comps(self):
-        return {}
-
-    def init_state(self):
-        r = {k: {} for k, x in self.comps.items()}
-        return r
-        
-    def set_state(self, state):
-        super(CompositeAccumulator, self).set_state(state)
-        s = self.state
-        for k, x in self.comps.items():
-            setattr(self, k, x)
-            x.set_state(s[k])
-            
-    def get_state(self):
-        for k, x in self.comps.items():
-            x.get_state()
-        return self.state
 
