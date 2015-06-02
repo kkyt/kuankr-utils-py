@@ -16,6 +16,7 @@ def import_from_code(code, module_name=None):
         module_name = '_import_module_from_code_'
     mod = imp.new_module(module_name)
     exec code in mod.__dict__
+    preserve_module(mod)
     return mod
 
 def load_attribute(module_and_name, raise_exception=True):
@@ -54,4 +55,8 @@ def load_attribute(module_and_name, raise_exception=True):
             raise
         log.error(e)
         return None
+
+import sys
+def preserve_module(mod):
+    sys.modules[mod.__name__] = mod
 
