@@ -1,5 +1,6 @@
 import sys
 import imp
+import uuid
 
 from kuankr_utils import log, debug
 
@@ -14,6 +15,7 @@ def get_module(module):
 def import_from_code(code, module_name=None):
     if module_name is None:
         module_name = '_import_module_from_code_'
+        module_name += uuid.uuid1().hex
     mod = imp.new_module(module_name)
     exec code in mod.__dict__
     preserve_module(mod)
