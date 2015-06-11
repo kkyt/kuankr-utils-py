@@ -1,5 +1,6 @@
 import sys
 import imp
+import uuid
 
 from kuankr_utils import log, debug
 
@@ -14,8 +15,10 @@ def get_module(module):
 def import_from_code(code, module_name=None):
     if module_name is None:
         module_name = '_import_module_from_code_'
+        module_name += uuid.uuid1().hex
     mod = imp.new_module(module_name)
     exec code in mod.__dict__
+    preserve_module(mod)
     return mod
 
 def load_attribute(module_and_name, raise_exception=True):
@@ -54,4 +57,10 @@ def load_attribute(module_and_name, raise_exception=True):
             raise
         log.error(e)
         return None
+
+import sys
+def preserve_module(mod):
+    if sys.modules.get(mod.__name__) is not None:
+        raise Exception('name of user-defined code segments conflict')
+    sys.modules[mod.__name__] = mod
 
