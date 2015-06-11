@@ -274,17 +274,15 @@ class HasTemplate(Document):
 
 class HasConfig(Document):
     structure = {
-        'config': basestring,
+        'config': dict,
     }
     def get_config(self):
-        c = self['config']
-        if c:
+        c = self['config'] or {}
+        if isinstance(c, basestring):
             try:
                 c = yaml.load(c)
             except:
                 return None
-        else:
-            c = {}
         return c
 
     def validate(self, *args, **kwargs):

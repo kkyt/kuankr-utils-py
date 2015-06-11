@@ -63,7 +63,7 @@ setup(
 
         #mongodb
         "mongokit",
-        "pymongo",
+        "pymongo<3.0",
 
         #log
         "python-logstash",

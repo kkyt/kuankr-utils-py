@@ -4,10 +4,13 @@ from collections import deque
 from .stateful import Stateful
 
 class Accumulator(Stateful):
-    @property
-    def value(self, **kwargs):
-        return None
+    '''
+    NOTE: inherited need implement .value in one of the following ways:
 
+    1. self.value = x
+    2. @property
+       def value(self):
+    '''
     def feed(self, value):
         pass
 

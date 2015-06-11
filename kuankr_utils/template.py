@@ -30,3 +30,11 @@ def render_simple(t, params=None, safe=True):
     else:
         return t.substitute(params)
 
+def render_dict_simple(obj, keys, params):
+    for key in keys:
+        d = obj
+        for k in key[:-1]:
+            d = d[k]
+        d[key[-1]] = render_simple(d[key[-1]], params)
+
+
