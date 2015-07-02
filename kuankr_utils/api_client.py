@@ -31,6 +31,7 @@ class ApiClient(object):
             raise Exception('unknown service: %s' % service)
 
         schema = env.get('%s_SCHEMA' % service.upper())
+        s = None
         if schema and os.path.exists(schema):
             f = open(schema)
             s = f.read()
@@ -40,22 +41,28 @@ class ApiClient(object):
             log.debug('GET ' + u)
 
             #wait until api is available
-            s = 0.1
+            sleep = 0.1
             while True:
                 try:
                     r = requests.get(u)
                     break
                 except ConnectionError as e:
                     import gevent
-                    log.info('wait %s secs for api service: %s %s' % (s, service, uri))
-                    gevent.sleep(s)
-                    s *= 2
+                    log.info('wait %s secs for api service: %s %s' % (sleep, service, uri))
+                    gevent.sleep(sleep)
+                    sleep *= 2
 
-            s = r.content
+            if r.status_code==200:
+                s = r.content
 
         if not s:
-            raise Exception("no schema found for service: %s" % service)
-        schema = json.loads(s)
+            log.warn("no schema found for service: %s" % service)
+            #emtpy schema
+            schema = {
+                'properties': {}
+            }
+        else:
+            schema = json.loads(s)
 
         #schema = Heroics::Schema.new schema
         headers = {}
