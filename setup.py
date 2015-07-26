@@ -69,7 +69,7 @@ setup(
         "raven",
 
         #debug
-        "faulthandler",
+        #"faulthandler",
         "Dozer",
 
         #gevent
@@ -78,7 +78,7 @@ setup(
 
         #yaml
         "PyYAML",
-        "ujson"
+        #"ujson"
     ],
 
     dependency_links=[
