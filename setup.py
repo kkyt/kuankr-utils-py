@@ -85,7 +85,10 @@ setup(
         "inflection",
 
         #network
-        "netifaces"
+        "netifaces",
+
+        #redis
+        "redis"
     ],
 
     dependency_links=[
