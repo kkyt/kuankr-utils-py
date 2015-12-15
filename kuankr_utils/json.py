@@ -17,7 +17,6 @@ from kuankr_utils.date_time import with_tzinfo, to_datetime
 _encoders = {}
 
 def register_encoder(cls):
-    log.debug('kuankr_utils.json.register_encoder: %s' % cls.__name__)
 
     global _encoders
     def inner(encoder):
