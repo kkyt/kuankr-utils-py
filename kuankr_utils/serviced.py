@@ -180,7 +180,11 @@ _sd = None
 def get_serviced(**kwargs):
     global _sd
     if _sd is None:
-        _sd = RedisServiceD(**kwargs)
+        try:
+            _sd = RedisServiceD(**kwargs)
+        except Exception as e:
+            log.info('RedisServiceD error, use default: %s' % e)
+            _sd = ServiceD()
         _sd.setup()
 
     return _sd

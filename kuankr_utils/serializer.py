@@ -21,7 +21,7 @@ class Serializer(object):
 
     def dumps(self, x):
         if isinstance(x, types.GeneratorType):
-            return self.dumps_stream(x)
+            return self.dump_stream(x)
         else:
             if isinstance(x, unicode):
                 return x.encode('utf8')
@@ -30,24 +30,19 @@ class Serializer(object):
 
     def loads(self, s):
         if isinstance(s, types.GeneratorType):
-            return self.loads_stream(s)
+            return self.load_stream(s)
         else:
             return s
 
+    #TODO: delete
     def loads_stream(self, stream, ignore_error=False):
-        #for show in stack traceback
-        n = 0 
-        for x in stream:
-            n += 1
-            try:
-                yield self.loads(x)
-            except Exception as e:
-                if not ignore_error:
-                    raise
-                else:
-                    log.error('%r\n%s' % (x, e))
-
+        log.error('use load_stream')
+        return self.load_stream(stream, ignore_error)
     def dumps_stream(self, stream, ignore_error=False):
+        log.error('use dump_stream')
+        return self.dump_stream(stream, ignore_error)
+
+    def dump_stream(self, stream, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -70,8 +65,12 @@ class Serializer(object):
         f.write(s + self.sep())
 
     def load_stream(self, f, ignore_error=False):
+        #for show in stack traceback
         n = 0 
         for line in f:
+            #skip empty line by default
+            if line=='\n' or line=='\r\n' or line=='':
+                continue
             n += 1
             try:
                 yield self.loads(line)
@@ -81,7 +80,7 @@ class Serializer(object):
                 else:
                     log.error('%r\n%s' % (line, e))
     
-    def dump_stream(self, stream, f, ignore_error=False):
+    def dump_stream_to_file(self, stream, f, ignore_error=False):
         n = 0 
         for x in stream:
             n += 1
@@ -171,10 +170,10 @@ class CsvSerializer(Serializer):
     def loads(self, x):
         return csv.dumps(x, **self.options)
 
-    def dump_stream(self, stream, f, ignore_error=False):
+    def dump_stream_to_file(self, stream, f, ignore_error=False):
         if self.headers:
             self.dump_sep(self.headers, f)
-        return super(CsvSerializer, self).dump_stream(stream, f, ignore_error)
+        return super(CsvSerializer, self).dump_stream_to_file(stream, f, ignore_error)
             
     def sep(self):
         return ''
@@ -187,14 +186,14 @@ class MsgpackSerializer(Serializer):
     def dumps(self, x):
         from kuankr_utils import msgpack
         if isinstance(x, types.GeneratorType):
-            return self.dumps_stream(x)
+            return self.dump_stream(x)
         else:
             return msgpack.dumps(x)
 
     def loads(self, s):
         from kuankr_utils import msgpack
         if isinstance(s, types.GeneratorType):
-            return self.loads_stream(s)
+            return self.load_stream(s)
         else:
             return msgpack.loads(s, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
@@ -202,7 +201,7 @@ class MsgpackSerializer(Serializer):
         from kuankr_utils import msgpack
         return msgpack.load_stream(f, encoding=self.encoding, unicode_errors=self.unicode_errors)
 
-    def dump_stream(self, stream, f, sep=None):
+    def dump_stream_to_file(self, stream, f, sep=None):
         from kuankr_utils import msgpack
         return msgpack.streaming_dump(stream, f)
 

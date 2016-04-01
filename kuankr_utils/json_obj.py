@@ -78,7 +78,7 @@ def decode(d, arguments=None, options=None):
                     nam = a[-1]
                     mod = '.'.join(a[:-1])
 
-            if mod is None:
+            if not mod:
                 code = d.get('__code__')
                 if code is not None:
                     m = module.import_from_code(code)

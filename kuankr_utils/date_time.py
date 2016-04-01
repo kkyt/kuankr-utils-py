@@ -19,28 +19,27 @@ TIME_LEN = len('00:00:00')
 tzinfo是关于时区信息的类
 tzinfo是一个抽象类，所以不能直接被实例化
 """
-class UTC(tzinfo):
+from pytz.tzinfo import StaticTzInfo
+
+class UTC(StaticTzInfo):
     """UTC"""
-    def __init__(self,offset = 0):
+    def __init__(self,offset=0):
         self._offset = offset
+        self._utcoffset = timedelta(hours=offset)
+        self.zone = 'UTC%s' % offset
 
-    def utcoffset(self, dt):
-        return timedelta(hours=self._offset)
-
-    def tzname(self, dt):
-        return "UTC +%s" % self._offset
-
-    def dst(self, dt):
-        return timedelta(hours=self._offset)
+    def __reduce__(self):
+        return UTC, (self._offset,)
 
 def localzone():
     #TODO
     #NOTE: 在docker或VM里运行时,如果镜像没设好local zone,就会出错, 所以直接写死成 UTC8(Asia/Shanghai)
     if not os.environ.get('TZ'):
-        #return UTC(8) #don't support localize
+        return UTC(8)
         #TODO: http://hi.baidu.com/limodou/item/4a13b3107fca86f89d778af1
+        #pytz新版本中Asia/Taipei也有6分钟误差
         #return pytz.timezone('Asia/Shanghai')
-        return pytz.timezone('Asia/Taipei')
+        #return pytz.timezone('Asia/Taipei')
     else:
         return tzlocal.get_localzone() 
 
@@ -137,11 +136,11 @@ def to_datetime(dt):
         else:
             return with_tzinfo(parse_datetime(dt))
 
-    elif isinstance(dt, date):
-        return with_tzinfo(datetime(dt.year, dt.month, dt.day))
-
     elif isinstance(dt, datetime):
         return with_tzinfo(dt)
+
+    elif isinstance(dt, date):
+        return with_tzinfo(datetime(dt.year, dt.month, dt.day))
 
     else:
         return None

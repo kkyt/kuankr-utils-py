@@ -5,12 +5,16 @@ import six
 import uuid
 import copy
 import bson
+import yaml
 from datetime import datetime
 
 from kuankr_utils import log, debug, date_time
 from kuankr_utils.mongodb import OBJECTID_PATTERN
 
-from mongokit import Connection, Document
+from mongokit import Connection, Document, OR
+
+numeric = OR(float, int, long)
+string_or_dict = OR(basestring, unicode, dict)
 
 def register_models(db, *models):
     for model in models:
@@ -18,30 +22,46 @@ def register_models(db, *models):
         model.generate_index(db[model.__collection__])
 
 def to_object_id(id):
+    if id is None:
+        return id
     if not isinstance(id, bson.ObjectId):
-        id = bson.ObjectId(id)
+        try:
+            id = bson.ObjectId(id)
+        except:
+            id = None
     return id
         
-class Doc(Document):
+class HasUUID(Document):
+    structure = {
+        'uuid': uuid.UUID,
+    }
+    default_values = {
+        'uuid': uuid.uuid4,
+    }
+    required_fields = [ 'uuid' ]
+
+class HasTimestamp(Document):
+    structure = {
+        'updated_at': datetime,
+        'created_at': datetime,
+    }
+    default_values = {
+        'created_at': date_time.now,
+        'updated_at': date_time.now
+    }
+    required_fields = [ 'updated_at', 'created_at' ]
+
+class DocBase(Document):
     '''
     NOTE: 
         x = Doc(d) didn't create default_values
         should use: x = Doc(); x.update(d);
     '''
-    structure = {
-        'updated_at': datetime,
-        'created_at': datetime,
-        'uuid': uuid.UUID,
-    }
-    default_values = {
-        'uuid': uuid.uuid4,
-        'created_at': date_time.now,
-        'updated_at': date_time.now
-    }
-    required_fields = [ 'uuid', 'updated_at', 'created_at' ]
 
-    #for create cleanup
-    protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
+    protected_fields = ['id', '_id']
+
+    #will be the default in future mongokit release
+    use_schemaless = True
 
     def after_create(self):
         return
@@ -60,10 +80,35 @@ class Doc(Document):
     def remove(self, query):
         self.collection.remove(query)
 
+    def remove_by_id(self, id):
+        return self.remove({'_id': to_object_id(id)})
+
+    def get_field(self, id, field, default=None):
+        r = self.collection.find_one({'_id': to_object_id(id)})
+        if r is None:
+            return None
+        else:
+            return r.get(field, default)
+
+    def set_field(self, id, field, value):
+        self.collection.update(
+            {'_id': to_object_id(id)}, 
+            {'$set': {field: value}}
+        )
+
+    def inc_field(self, id, field, change):
+        self.collection.update(
+            {'_id': to_object_id(id)}, 
+            {'$inc': {field: change}}
+        )
+    
     def create(self, d):
         #NOTE: Model() doesn't work
         x = self()
-        d = dict(d)
+        if d is None:
+            d = {}
+        else:
+            d = dict(d)
         for f in self.protected_fields:
             if f in d:
                 del d[f]
@@ -73,7 +118,7 @@ class Doc(Document):
 
     def save(self):
         self.before_save()
-        return super(Doc, self).save()
+        return super(DocBase, self).save()
 
     def put_by_id(self, id, doc):
         id = to_object_id(id)
@@ -88,6 +133,8 @@ class Doc(Document):
 
     def find_by_id(self, id, where=None):
         id = to_object_id(id)
+        if id is None:
+            return None
         w = {'_id': id}
         if where:
             w.update(where)
@@ -100,6 +147,15 @@ class Doc(Document):
             del d['_id']
         return d
         
+class DocWithoutUUID(DocBase, HasTimestamp):
+    #for create cleanup
+    protected_fields = ['updated_at', 'created_at', 'id', '_id']
+
+class DocWithUUID(DocBase, HasTimestamp, HasUUID):
+    protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
+
+Doc = DocWithoutUUID
+
 class HasName(Document):
     structure = {
         'name': basestring,
@@ -179,19 +235,24 @@ class HasApp(Document):
 
     def validate(self, *args, **kwargs):
         super(HasApp, self).validate(*args, **kwargs)
+        name = self['name']
+        a = []
+        if name:
+            a = name.split('.')
+        if len(a)<3:
+            raise Exception('component name of %s must be of user.app.component format, got %s' % (self.__class__.__name__, name))
 
         #NOTE: not working: `if not 'app' in self`
-        if not self.get('app'):
-            a = self['name'].split('.')
-            self['app'] = '.'.join(a[:2])
+        app = self.get('app')
+        if not app:
+            app = self['app'] = '.'.join(a[:2])
 
-        a = self['name'].split('.')
-        assert len(a)>=3
+        b = app.split('.')
+        if len(b)!=2:
+            raise Exception('app name must be of user.app format, got %s' % app)
 
-        b = self['app'].split('.')
-        assert len(b)==2
-
-        assert a[0]==b[0] and a[1]==b[1]
+        if a[0]!=b[0] or a[1]!=b[1]:
+            raise Exception('app name donot match component name: %s %s' % (app, name))
 
 class HasTitleDesc(Document):
     structure = {
@@ -211,6 +272,25 @@ class HasTemplate(Document):
     required_fields = [
     ]
 
+class HasConfig(Document):
+    structure = {
+        'config': dict,
+    }
+    def get_config(self):
+        c = self['config'] or {}
+        if isinstance(c, basestring):
+            try:
+                c = yaml.load(c)
+            except:
+                return None
+        return c
+
+    def validate(self, *args, **kwargs):
+        super(HasConfig, self).validate(*args, **kwargs)
+        c = self.get_config()
+        if c is None:
+            raise Exception('invalid yaml config: %s' % self['config'])
+
 class HasCodeObject(Document):
     '''
         object: {
@@ -219,7 +299,7 @@ class HasCodeObject(Document):
             'name': basestring,
             'arguments': list,
             'options': dict,
-            'source_code': basestring,
+            'code': basestring,
         }
     '''
     structure = {

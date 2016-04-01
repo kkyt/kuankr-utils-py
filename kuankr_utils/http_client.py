@@ -35,11 +35,8 @@ class HttpClient(object):
                 'application/msgpack': 'msgpack',
                 'application/octet-stream': 'raw'
             }
-            t = d.get(content_type)
-            if t is None:
-                raise Exception('unkown content type: %s' % content_type)
-            else:
-                s = self.serializer_cache[content_type] = get_serializer(t)
+            t = d.get(content_type, 'raw')
+            s = self.serializer_cache[content_type] = get_serializer(t)
         return s
 
     def __init__(self, base, headers=None, options=None, async_send=False, content_type=None):
@@ -62,25 +59,28 @@ class HttpClient(object):
         from gevent.local import local
         self.local = local()
 
+    def make_session(self):
+        ses = requests.Session()
+        ses.hooks.update(response=response_hook)
+        if self.async_send:
+            #NOTE: must patch_all, otherwise it will hangs
+            from gevent import monkey; monkey.patch_all()
+            ses.mount('http://', HTTPStreamAdapter())
+            #TODO https
+
+        ses.headers.update(self.headers)
+        return ses
+
     @property
     def session(self):
         #NOTE: don not share session between greenlets
         if not hasattr(self.local, 'session'):
-            ses = requests.Session()
-            ses.hooks.update(response=response_hook)
-            if self.async_send:
-                #NOTE: must patch_all, otherwise it will hangs
-                from gevent import monkey; monkey.patch_all()
-                ses.mount('http://', HTTPStreamAdapter())
-                #TODO https
-
-            self.local.session = ses
-            self.set_headers(self.headers)
-
+            self.local.session = self.make_session()
         return self.local.session
 
-    def http(self, method, path, data=None, params=None, stream=False, content_type=None, **kwargs):
-        headers = {}
+    def http(self, method, path, data=None, params=None, stream=False, content_type=None, headers=None, **kwargs):
+        if headers is None:
+            headers = {}
 
         if content_type is not None:
             serializer = self.get_serializer(content_type)
@@ -135,6 +135,7 @@ class HttpClient(object):
             log.debug('%s' % headers_line(r.headers))
 
         if stream:
+            '''
             def g():
                 #NOTE:
                 #work before response_hook
@@ -142,14 +143,20 @@ class HttpClient(object):
 
                 #work after response_hook
                 chunks = r.iter_chunks()
-                if HTTP_STREAM_DEBUG:
-                    chunks = stream_with_echo(chunks, debug_repr)
                 for x in chunks:
                     yield serializer.loads(x)
+            '''
+            def g():
+                for x in serializer.load_stream(r.raw):
+                    yield x
+
             r.raise_for_status()
             if HTTP_CLIENT_DEBUG and not HTTP_STREAM_DEBUG:
                 log.debug('\n<stream>')
-            return g()
+            s = g()
+            if HTTP_STREAM_DEBUG:
+                s = stream_with_echo(s, debug_repr)
+            return s
         else:
             s = r.content
             if HTTP_CLIENT_DEBUG:

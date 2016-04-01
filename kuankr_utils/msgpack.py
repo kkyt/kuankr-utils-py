@@ -87,6 +87,7 @@ def load_stream(f, ignore_error=True, **options):
         n += 1
         try:
             e = next(unpacker)
+            yield e
         except StopIteration:
             break
         except Exception as e:

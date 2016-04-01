@@ -10,11 +10,15 @@ def not_found(environ, start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return ['Not Found']
 
-def create_app(api, admin_app=None, name=None):
-    version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
-    d = {
-        '/' + version: api
-    }
+def create_app(api, admin_app=None, name=None, version=None):
+    if isinstance(api, dict):
+        d = dict(api)
+    else:
+        if version is None:
+            version = os.environ.get('KUANKR_SERVICE_VERSION', 'v1')
+        d = {
+            '/' + version: api
+        }
     if admin_app is not None:
         d['/admin'] = admin_app
     app = DispatcherMiddleware(not_found, d)
@@ -38,6 +42,7 @@ def create_app(api, admin_app=None, name=None):
         from dozer import Dozer, Profiler
         #TODO: set profile path in flask app
         #app = Profiler(app)
+        #localhost/_profiler
         app = Dozer(app)
 
 

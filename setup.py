@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='kuankr-utils',
-    version='0.0.1',
+    version='0.3.0',
 
     author='dev',
     author_email='dev@agutong.com',
@@ -45,6 +45,7 @@ setup(
         "pytz",
         "tzlocal",
         "aniso8601",
+        "python-dateutil",
 
         #test
         "pytest",
@@ -62,7 +63,7 @@ setup(
 
         #mongodb
         "mongokit",
-        "pymongo",
+        "pymongo<3.0",
 
         #log
         "python-logstash",
@@ -78,7 +79,16 @@ setup(
 
         #yaml
         "PyYAML",
-        "ujson"
+        "ujson",
+
+        #string
+        "inflection",
+
+        #network
+        "netifaces",
+
+        #redis
+        "redis"
     ],
 
     dependency_links=[

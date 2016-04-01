@@ -10,6 +10,12 @@ import heroics.client
 from . import log
 from . import serviced
 
+def normalize_header_key(s):
+    return s.lower().replace('_', '-')
+
+def normalize_headers(h):
+    return { normalize_header_key(k): v for k,v in h.items()}
+
 class ApiClient(object):
     def __init__(self, service, uri=None, **options):
         self.service = service
@@ -25,6 +31,7 @@ class ApiClient(object):
             raise Exception('unknown service: %s' % service)
 
         schema = env.get('%s_SCHEMA' % service.upper())
+        s = None
         if schema and os.path.exists(schema):
             f = open(schema)
             s = f.read()
@@ -34,34 +41,40 @@ class ApiClient(object):
             log.debug('GET ' + u)
 
             #wait until api is available
-            s = 0.1
+            sleep = 0.1
             while True:
                 try:
                     r = requests.get(u)
                     break
                 except ConnectionError as e:
                     import gevent
-                    log.info('wait %s secs for api service: %s %s' % (s, service, uri))
-                    gevent.sleep(s)
-                    s *= 2
+                    log.info('wait %s secs for api service: %s %s' % (sleep, service, uri))
+                    gevent.sleep(sleep)
+                    sleep *= 2
 
-            s = r.content
+            if r.status_code==200:
+                s = r.content
 
         if not s:
-            raise Exception("no schema found for service: %s" % service)
-        schema = json.loads(s)
+            log.warn("no schema found for service: %s" % service)
+            #emtpy schema
+            schema = {
+                'properties': {}
+            }
+        else:
+            schema = json.loads(s)
 
         #schema = Heroics::Schema.new schema
         headers = {}
         for x in ['api_client', 'auth_token', 'admin_token']:
             v = env.get('KUANKR_%s' % x.upper())
             if v:
-                h = ('x_%s' % x).replace('_', '-')
-                headers[h] = v
+                headers['x_%s' % x] = v
 
+        headers = normalize_headers(headers)
         dh = options.get('default_headers')
         if dh:
-            headers.update(dh)
+            headers.update(normalize_headers(dh))
         options['default_headers'] = headers
 
         self.schema = schema
