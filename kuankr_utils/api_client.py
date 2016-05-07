@@ -44,13 +44,15 @@ class ApiClient(object):
             sleep = 0.1
             while True:
                 try:
-                    r = requests.get(u)
+                    r = requests.get(u, timeout=3)
                     break
                 except ConnectionError as e:
                     import gevent
                     log.info('wait %s secs for api service: %s %s' % (sleep, service, uri))
                     gevent.sleep(sleep)
                     sleep *= 2
+                    if sleep > 20:
+                        sleep = 0.1
 
             if r.status_code==200:
                 s = r.content
