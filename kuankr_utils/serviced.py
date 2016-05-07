@@ -17,7 +17,8 @@ class ServiceD(object):
     def normalize_uri(self, uri):
         local_ip = network.get_ip_address()
         old_uri = uri.strip()
-        uri = uri.replace('127.0.0.1', local_ip)
+        if local_ip:
+            uri = uri.replace('127.0.0.1', local_ip)
         if uri != old_uri:
             log.info('local ip: %s' % local_ip)
             log.info('ServiceD.normalize_uri: %s -> %s' % (old_uri, uri))
