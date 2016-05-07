@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
 import os
+import traceback
 import json
 import requests
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, ReadTimeout
 
 import heroics.client
 
@@ -46,8 +47,9 @@ class ApiClient(object):
                 try:
                     r = requests.get(u, timeout=3)
                     break
-                except ConnectionError as e:
+                except (ConnectionError, ReadTimeout) as e:
                     import gevent
+                    traceback.print_exc()
                     log.info('wait %s secs for api service: %s %s' % (sleep, service, uri))
                     gevent.sleep(sleep)
                     sleep *= 2
