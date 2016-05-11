@@ -158,7 +158,7 @@ def to_interval(dt):
     else:
         return (dt, dt)
 
-def from_timestamp(t):
+def local_from_timestamp(t):
     return to_local(datetime.fromtimestamp(t))
 
 #datetime range
