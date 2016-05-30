@@ -438,6 +438,9 @@ class BaseService(object):
             #inherited may override remove
             self.remove(x['_id'])
         return n
+    
+    def count(self, w):
+        return self.Model.count(w)
         
 class ServiceWithName(BaseService):
     def remove(self, id_or_name):
