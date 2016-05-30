@@ -146,6 +146,9 @@ class DocBase(Document):
             d['id'] = d['_id']
             del d['_id']
         return d
+
+    def count(self, where=None):
+        return self.collection.find(where).count()
         
 class DocWithoutUUID(DocBase, HasTimestamp):
     #for create cleanup
