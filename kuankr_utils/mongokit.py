@@ -396,6 +396,9 @@ class BaseService(object):
         log.error('TODO: remove')
         return self.get(id)
 
+    def find_one(self, where=None):
+        return self.Model.find_one(where)
+
     def find_all(self, where=None):
         return self.Model.find(where)
 

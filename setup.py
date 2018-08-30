@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='kuankr-utils',
-    version='0.3.1',
+    version='0.3.2',
 
     author='dev',
     author_email='dev@agutong.com',
