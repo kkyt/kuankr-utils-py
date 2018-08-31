@@ -158,7 +158,7 @@ class DocWithUUID(DocBase, HasTimestamp, HasUUID):
     protected_fields = ['updated_at', 'created_at', 'uuid', 'id', '_id']
 
 Doc = DocWithoutUUID
-DocU = DocDocWithUUID
+DocU = DocWithUUID
 
 class HasName(Document):
     structure = {
