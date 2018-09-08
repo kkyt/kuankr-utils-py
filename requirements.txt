@@ -1,1 +1,1 @@
-git+ssh://git@git.agutong.com:5678/OpenSource/msgpack-python.git
+

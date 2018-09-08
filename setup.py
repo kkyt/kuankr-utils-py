@@ -4,11 +4,11 @@ from setuptools import setup
 
 setup(
     name='kuankr-utils',
-    version='0.3.2',
+    version='0.3.3',
 
     author='dev',
     author_email='dev@agutong.com',
-    url='http://git.agutong.com/dev/kuankr-utils',
+    url='https://github.com/kkyt/kuankr-utils-py',
 
     license='LICENSE',
     description='kuankr utils',
@@ -36,59 +36,61 @@ setup(
 
     install_requires=[
         #basic
-        "six",
-        "enum34",
-        "simplejson",
-        "namedlist",
+        "six==1.9.0",
+        "enum34==1.0.4",
+        "simplejson==3.6.5",
+        "namedlist==1.6",
 
         #datetime
-        "pytz",
-        "tzlocal",
-        "aniso8601",
-        "python-dateutil",
+        "pytz==2015.2",
+        "tzlocal==1.1.3",
+        "aniso8601==0.92",
+        "python-dateutil==2.4.2",
 
         #test
-        "pytest",
-        "colorlog",
-        "colorama",
+        "pytest==2.6.4",
+        "colorlog==2.6.0",
+        "colorama==0.3.3",
 
         #flask
-        "blinker",
-        "flask",
-        "Flask-API",
-        "Flask-MongoEngine",
+        "blinker==1.3",
+        "flask==0.10.1",
+        "Flask-API==0.6.2",
+        "Flask-MongoEngine==0.7.1",
 
         #http
-        "requests",
+        "requests==2.7.0",
 
         #mongodb
-        "mongokit",
+        "mongokit==0.9.1.1",
         "pymongo<3.0",
 
         #log
-        "python-logstash",
-        "raven",
+        "python-logstash==0.4.2",
+        "raven==5.3.1",
 
         #debug
-        "faulthandler",
-        "Dozer",
+        "faulthandler==2.4",
+        "Dozer==0.4",
 
         #gevent
         "gevent>=1.0",
-        "gunicorn",
+        "gunicorn==19.1.1",
 
         #yaml
-        "PyYAML",
-        "ujson",
+        "PyYAML==3.11",
+        "ujson==1.33",
 
         #string
-        "inflection",
+        "inflection==0.3.1",
 
         #network
-        "netifaces",
+        "netifaces==0.10.7",
 
         #redis
-        "redis"
+        "redis==2.10.3",
+        
+        'msgpack==0.5.6'
     ],
 
     dependency_links=[
